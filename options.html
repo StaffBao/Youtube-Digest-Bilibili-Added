@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Digest Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="settings-shell">
+      <header>
+        <div class="settings-heading-row">
+          <div class="eyebrow">YouTube Digest</div>
+          <div
+            class="language-switch"
+            role="group"
+            aria-label="Interface language"
+            data-i18n-aria-label="languageGroupLabel"
+          >
+            <button
+              class="language-option"
+              type="button"
+              data-language="en"
+              aria-pressed="true"
+            >
+              English
+            </button>
+            <button
+              class="language-option"
+              type="button"
+              data-language="zh-CN"
+              aria-pressed="false"
+            >
+              中文
+            </button>
+          </div>
+        </div>
+        <h1 data-i18n="heading">Bring your own AI endpoint</h1>
+        <p class="lede" data-i18n="lede">
+          Settings stay in this Chrome profile. AI requests are sent only to
+          the endpoint you configure below. This open-source extension has no
+          developer server or analytics.
+        </p>
+      </header>
+
+      <form id="settingsForm">
+        <section class="card">
+          <h2 data-i18n="transcriptProvider">Transcript provider</h2>
+          <div
+            class="provider-summary"
+            aria-label="Transcript source"
+            data-i18n-aria-label="transcriptSummaryLabel"
+          >
+            <span class="provider-name" data-i18n="transcriptDirectName"
+              >Direct from the video platform</span
+            >
+            <span class="provider-badge" data-i18n="transcriptBadge"
+              >No API key needed</span
+            >
+          </div>
+          <p class="help" data-i18n="transcriptHelp">
+            Captions are read directly from the video page. YouTube caption
+            tracks are downloaded from YouTube itself, and Bilibili subtitles
+            are fetched with your browser's own Bilibili login, so there is no
+            third-party transcript service and nothing to sign up for.
+          </p>
+          <label class="checkbox-field">
+            <input type="checkbox" id="enableBilibili" name="enableBilibili" />
+            <span data-i18n="bilibiliToggleLabel"
+              >Enable Bilibili mode (bilibili.com video pages)</span
+            >
+          </label>
+          <p class="help" data-i18n="bilibiliHelp">
+            Turn on digests, translation, and notes for Bilibili videos. Sign
+            in to bilibili.com in this browser first: subtitles are only
+            available to logged-in accounts.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2 data-i18n="aiProvider">AI provider</h2>
+          <div
+            class="provider-summary"
+            aria-label="Supported AI provider"
+            data-i18n-aria-label="providerSummaryLabel"
+          >
+            <span class="provider-name" data-i18n="providerName"
+              >Any OpenAI-compatible endpoint</span
+            >
+            <span class="provider-badge" data-i18n="providerBadge"
+              >Configurable in this version</span
+            >
+          </div>
+
+          <label for="aiBaseUrl" data-i18n="aiBaseUrlLabel">API base URL</label>
+          <input
+            id="aiBaseUrl"
+            name="aiBaseUrl"
+            type="url"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"
+            data-i18n-placeholder="aiBaseUrlPlaceholder"
+          />
+          <p class="help">
+            <span data-i18n="aiBaseUrlHelp"
+              >The Chat Completions base URL of your provider. The default is
+              Alibaba Cloud DashScope (Qwen), and any OpenAI-compatible
+              gateway works.</span
+            >
+            <a
+              href="https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope"
+              target="_blank"
+              rel="noreferrer"
+              data-i18n="aiBaseUrlLink"
+              >DashScope OpenAI-compatible endpoint guide</a
+            ><span data-i18n="aiBaseUrlHelpSuffix">.</span>
+          </p>
+
+          <label for="aiApiKey" data-i18n="aiApiKeyLabel">API key</label>
+          <input
+            id="aiApiKey"
+            name="aiApiKey"
+            type="password"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Paste your API key"
+            data-i18n-placeholder="aiApiKeyPlaceholder"
+          />
+          <p class="help">
+            <span data-i18n="aiApiKeyHelp"
+              >Used for overviews, explanations, translation, and note
+              polishing.</span
+            >
+            <a
+              href="https://bailian.console.aliyun.com/?apiKey=1#/api-key"
+              target="_blank"
+              rel="noreferrer"
+              data-i18n="aiApiKeyLink"
+              >Create a DashScope API key</a
+            ><span data-i18n="aiApiKeyHelpSuffix">.</span>
+          </p>
+
+          <label for="aiModel" data-i18n="aiModelLabel">Model</label>
+          <input
+            id="aiModel"
+            name="aiModel"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="qwen-plus"
+            data-i18n-placeholder="aiModelPlaceholder"
+          />
+          <p class="help">
+            <span data-i18n="aiModelHelp"
+              >The model name accepted by your endpoint, for example
+              qwen-plus, qwen-max, deepseek-chat, or gpt-4o-mini.</span
+            >
+          </p>
+
+          <div class="privacy-note" data-i18n="privacyNote">
+            When you use AI features, your configured endpoint receives the
+            video transcript and relevant video context. Review your
+            provider's terms and pricing before saving.
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <button class="primary" type="submit" data-i18n="saveSettings">
+            Save settings
+          </button>
+          <span id="saveStatus" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+
+      <details class="card customization-card">
+        <summary class="customization-summary">
+          <span class="customization-summary-copy">
+            <span class="eyebrow" data-i18n="localRemix">Local remix</span>
+            <span class="customization-title" data-i18n="customizationTitle"
+              >Need a provider that is not OpenAI-compatible?</span
+            >
+            <span
+              class="customization-purpose"
+              data-i18n="customizationPurpose"
+              >Edit and copy a safe prompt for your coding agent</span
+            >
+          </span>
+          <span class="agent-badge" data-i18n="agentBadge"
+            >Coding agent ready</span
+          >
+        </summary>
+        <div class="customization-content">
+          <p class="help customization-intro" data-i18n="customizationIntro">
+            You can edit the prompt directly. Complete these three steps before
+            copying:
+          </p>
+          <ol class="customization-steps">
+            <li data-i18n="customizationStepFolder">
+              Open the extracted YouTube Digest project folder in your coding
+              agent.
+            </li>
+            <li data-i18n="customizationStepReplace">
+              Replace [PROVIDER] with the service you want to use.
+            </li>
+            <li data-i18n="customizationStepKeys">
+              Never include API keys in the prompt or chat. Enter them yourself
+              after the code is ready.
+            </li>
+          </ol>
+          <label for="customizationPrompt" data-i18n="customizationPromptLabel"
+            >Editable customization prompt</label
+          >
+          <div
+            id="customizationPromptReminder"
+            class="prompt-reminder"
+            role="note"
+            aria-label="Prompt reminder"
+            data-i18n-aria-label="customizationReminderLabel"
+          >
+            <span data-i18n="customizationReminder"
+              >Before copying, replace [PROVIDER] with the provider you want to
+              use.</span
+            >
+          </div>
+          <textarea id="customizationPrompt" rows="12" aria-describedby="customizationPromptReminder">Customize this local YouTube Digest workspace to add support for [PROVIDER], which does not follow the OpenAI Chat Completions API. Work only in the current workspace. Before editing, verify that it contains manifest.json and that the manifest name is YouTube Digest. If verification fails, stop and ask me to open the extracted YouTube Digest project folder in my coding agent. Do not search other folders, edit a guessed copy, assume an installation path, or claim Chrome can reveal the absolute OS source path. Keep the existing OpenAI-compatible endpoint settings (API base URL, API key, model name) working unchanged. Add the new provider as an additional request adapter, with its own endpoint, request format, and retry behavior, so one provider does not affect another. Preserve bring-your-own-key and local Chrome storage. Never put API keys in source code, commits, logs, screenshots, this prompt, or chat; after the code is ready, tell me where to enter the key myself. Update README.md, README.zh-CN.md, PRIVACY.md, SECURITY.md, and tests. Run npm test, npm run check, and npm run package. Then explain how to reload the unpacked extension and test it on a real YouTube video.</textarea>
+          <div class="copy-actions">
+            <button
+              id="copyCustomizationPromptBtn"
+              type="button"
+              data-i18n="copyCustomizationPrompt"
+            >
+              Copy edited prompt
+            </button>
+            <span id="copyStatus" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+      </details>
+
+      <section class="card data-card">
+        <h2 data-i18n="localData">Local data</h2>
+        <p class="help" data-i18n="localDataHelp">
+          Digests, translations, and notes are stored only in this Chrome
+          profile. You can remove them at any time.
+        </p>
+        <div class="data-actions">
+          <button id="clearCacheBtn" type="button" data-i18n="clearCache">
+            Clear cached digests
+          </button>
+          <button id="clearNotesBtn" type="button" data-i18n="deleteNotes">
+            Delete all notes
+          </button>
+          <button
+            id="resetBtn"
+            class="danger"
+            type="button"
+            data-i18n="resetData"
+          >
+            Reset extension data
+          </button>
+        </div>
+        <span id="dataStatus" role="status" aria-live="polite"></span>
+      </section>
+
+      <footer data-i18n-html="footer">
+        Read <a href="PRIVACY.md" target="_blank">PRIVACY.md</a> in the
+        repository for the complete data-flow description.
+      </footer>
+    </main>
+
+    <script src="settings.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>
