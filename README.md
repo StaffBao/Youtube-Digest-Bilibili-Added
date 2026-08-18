@@ -1,5 +1,5 @@
 # Youtube-Digest-Bilibili-Added
-Secondary creation：Youtube Digest By zarazhangrui
+Secondary creation：Youtube Digest By @zarazhangrui
 
 Added Bilibili reading/parsing support.
 
