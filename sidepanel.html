@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Youtube Bilibili Digest</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <!-- HEADER -->
+    <!-- Note: the panel's own "Youtube Bilibili Digest" title is shown by Chrome's side-panel
+         title bar, so we don't repeat a logo here. -->
+    <div class="header">
+      <div class="header-top">
+        <!-- Video info -->
+        <div class="video-info" id="videoInfo" style="display: none">
+          <div class="video-title" id="videoTitle"></div>
+          <div class="video-channel" id="videoChannel"></div>
+        </div>
+        <button
+          class="settings-btn"
+          id="settingsBtn"
+          type="button"
+          title="Open Youtube Bilibili Digest settings"
+          aria-label="Open Youtube Bilibili Digest settings"
+        >
+          Settings
+        </button>
+      </div>
+
+      <!-- Tab navigation -->
+      <div class="tabs" id="tabsNav" style="display: none">
+        <button class="tab active" data-tab="transcript">Transcript</button>
+        <button class="tab" data-tab="overview">Overview</button>
+        <button class="tab" data-tab="notes">Notes</button>
+        <button class="tab" data-tab="docs">Docs</button>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="content" id="contentArea">
+      <!-- WELCOME STATE -->
+      <div id="welcomeState" class="welcome-container">
+        <div class="welcome-icon">&#9655;</div>
+        <div class="welcome-title">Ready to Digest</div>
+        <div class="welcome-desc">
+          Navigate to a YouTube video and click the extension icon to get an
+          AI-powered digest.
+        </div>
+      </div>
+
+      <!-- LOADING STATE -->
+      <div id="loadingState" style="display: none">
+        <div class="loading-container">
+          <div class="loading-bar"></div>
+          <div class="loading-text" id="loadingText">Fetching transcript</div>
+          <div class="loading-subtext" id="loadingSubtext">
+            Extracting captions from video...
+          </div>
+        </div>
+      </div>
+
+      <!-- ERROR STATE -->
+      <div id="errorState" style="display: none">
+        <div class="error-container">
+          <div class="error-icon">&#9888;</div>
+          <div class="error-title" id="errorTitle">Error</div>
+          <div class="error-message" id="errorMessage">
+            Something went wrong.
+          </div>
+          <button class="error-btn" id="errorBtn">Try Again</button>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div id="resultsState" style="display: none">
+        <!-- TAB: Transcript (default - no LLM required) -->
+        <div class="tab-panel active" data-panel="transcript">
+          <div class="section">
+            <div class="section-header transcript-section-header">
+              <div class="transcript-header-main">
+                <div class="section-title-wrap">
+                  <div class="section-title">Full Transcript</div>
+                </div>
+                <div
+                  class="transcript-mode-control"
+                  id="transcriptModeControl"
+                  role="group"
+                  aria-label="Transcript language"
+                >
+                  <button
+                    class="transcript-mode-btn active"
+                    type="button"
+                    data-transcript-mode="original"
+                    aria-pressed="true"
+                  >Original</button>
+                  <button
+                    class="transcript-mode-btn"
+                    type="button"
+                    data-transcript-mode="zh"
+                    aria-pressed="false"
+                  >中文</button>
+                  <button
+                    class="transcript-mode-btn"
+                    type="button"
+                    data-transcript-mode="bilingual"
+                    aria-pressed="false"
+                  >双语</button>
+                  <span
+                    class="translation-spinner"
+                    id="langSpinner"
+                    aria-label="Translating"
+                  ></span>
+                </div>
+              </div>
+              <div class="transcript-actions">
+                <button class="enhance-btn" id="copyTranscriptBtn">Copy</button>
+                <button class="enhance-btn" id="exportTranscriptBtn">
+                  Export
+                </button>
+                <button
+                  class="enhance-btn"
+                  id="punctuateTranscriptBtn"
+                  type="button"
+                  style="display:none"
+                >
+                  修复标点
+                </button>
+                <button
+                  class="enhance-btn"
+                  id="transcriptOriginalBtn"
+                  type="button"
+                  style="display:none"
+                >
+                  转写原文
+                </button>
+              </div>
+            </div>
+            <div
+              class="original-lang-notice"
+              id="originalLangNotice"
+              style="display:none"
+            >
+              <span class="original-lang-notice-text" id="originalLangNoticeText"></span>
+              <span class="original-lang-notice-actions">
+                <button
+                  class="enhance-btn"
+                  id="originalLangPrimaryBtn"
+                  type="button"
+                >
+                  转写原文
+                </button>
+                <button
+                  class="enhance-btn"
+                  id="originalLangForceBtn"
+                  type="button"
+                  style="display:none"
+                >
+                  仍然转写
+                </button>
+                <button
+                  class="enhance-btn"
+                  id="originalLangSettingsBtn"
+                  type="button"
+                  style="display:none"
+                >
+                  打开设置
+                </button>
+                <button
+                  class="original-lang-notice-close"
+                  id="originalLangNoticeClose"
+                  type="button"
+                  aria-label="关闭提示"
+                >
+                  &times;
+                </button>
+              </span>
+            </div>
+            <div id="transcriptList"></div>
+          </div>
+        </div>
+
+        <!-- TAB: Overview (chapters + key quotes) - requires LLM -->
+        <div class="tab-panel" data-panel="overview">
+          <!-- Overview language mode -->
+          <div class="section">
+            <div class="section-header overview-section-header">
+              <div class="section-title-wrap">
+                <div class="section-title">Language</div>
+              </div>
+              <div
+                class="overview-mode-control"
+                id="overviewModeControl"
+                role="group"
+                aria-label="Overview language"
+              >
+                <button
+                  class="overview-mode-btn active"
+                  type="button"
+                  data-overview-mode="original"
+                  aria-pressed="true"
+                >Original</button>
+                <button
+                  class="overview-mode-btn"
+                  type="button"
+                  data-overview-mode="zh"
+                  aria-pressed="false"
+                >中文</button>
+                <button
+                  class="overview-mode-btn"
+                  type="button"
+                  data-overview-mode="bilingual"
+                  aria-pressed="false"
+                >双语</button>
+                <span
+                  class="translation-spinner"
+                  id="overviewLangSpinner"
+                  aria-label="Translating overview"
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chapters -->
+          <div class="section">
+            <div class="section-title">Chapters</div>
+            <ul class="chapter-list" id="chapterList">
+              <li
+                class="chapter-item"
+                style="
+                  color: var(--text-muted);
+                  cursor: default;
+                  border-color: var(--border);
+                "
+              >
+                Chapters will appear here
+              </li>
+            </ul>
+          </div>
+
+          <!-- Key Quotes -->
+          <div class="section">
+            <div class="section-title">Key Quotes</div>
+            <div id="quotesList">
+              <div
+                class="quote-item"
+                style="
+                  color: var(--text-muted);
+                  border-left-color: var(--border);
+                  cursor: default;
+                "
+              >
+                <div class="quote-text" style="font-style: normal">
+                  Quotes will be extracted when you view this tab...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Notes -->
+        <div class="tab-panel" data-panel="notes">
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">Saved Notes</div>
+              <div class="notes-filter">
+                <button
+                  class="enhance-btn active"
+                  id="notesFilterThis"
+                  aria-pressed="true"
+                >
+                  This Video
+                </button>
+                <button
+                  class="enhance-btn"
+                  id="notesFilterAll"
+                  aria-pressed="false"
+                >
+                  All Notes
+                </button>
+              </div>
+            </div>
+            <p class="notes-intro" id="notesIntro">
+              Move your mouse over the video and click the 📝 Note button to
+              save timestamped notes, or press the "n" key while the video is
+              focused.
+            </p>
+            <div id="notesList"></div>
+          </div>
+        </div>
+
+        <!-- TAB: Docs (Word transcript generation) -->
+        <div class="tab-panel" data-panel="docs">
+          <div class="section">
+            <div class="section-header">
+              <div class="section-title">生成 Word 文稿</div>
+            </div>
+            <p class="docs-intro" id="docsIntro">
+              一键生成格式化的逐字稿（Word 文档），全程在浏览器内完成，无需本地服务。
+            </p>
+            <fieldset class="docs-lang-options" id="docsLangOptions" style="display:none">
+              <legend>选择要生成的逐字稿（生成前确认）</legend>
+              <label><input type="checkbox" id="docsOptSource"> 原文逐字稿（视频原始语言）</label>
+              <label><input type="checkbox" id="docsOptZh"> 中文逐字稿</label>
+              <label><input type="checkbox" id="docsOptBilingual"> 原文·中文对照（段落对齐）</label>
+              <div class="docs-lang-hint" id="docsLangHint">
+                <span id="docsLangHintText"></span>
+                <label class="docs-lang-override" for="docsLangOverride">视频语言
+                  <select id="docsLangOverride">
+                    <option value="auto">自动判断</option>
+                    <option value="en">原文（非中文）</option>
+                    <option value="zh">中文</option>
+                  </select>
+                </label>
+              </div>
+            </fieldset>
+            <fieldset class="docs-content-options" id="docsContentOptions" style="display:none">
+              <legend>文稿内容与格式</legend>
+              <label><input type="checkbox" id="docsOptMeta" checked> 视频信息头（标题 / UP主 / 链接 / 时长）</label>
+              <label><input type="checkbox" id="docsOptOverview"> AI 概览（章节 + 关键引述）</label>
+              <label><input type="checkbox" id="docsOptNotes"> 时间戳笔记</label>
+              <label><input type="checkbox" id="docsOptTimestamps"> 逐句时间戳（保留每句起始时间）</label>
+              <div class="docs-content-note" id="docsTimestampsNote" style="display:none"></div>
+              <div class="docs-format">
+                <label class="docs-format-field" for="docsFormat">文件格式
+                  <select id="docsFormat">
+                    <option value="doc">.doc（Word 兼容）</option>
+                    <option value="docx">.docx（标准 Word）</option>
+                  </select>
+                </label>
+                <label class="docs-format-field" for="docsSrcLang">原文语言
+                  <select id="docsSrcLang">
+                    <option value="">自动</option>
+                    <option value="en">英文</option>
+                    <option value="ja">日文</option>
+                    <option value="ko">韩文</option>
+                    <option value="fr">法文</option>
+                    <option value="de">德文</option>
+                    <option value="es">西班牙文</option>
+                    <option value="ru">俄文</option>
+                    <option value="pt">葡萄牙文</option>
+                    <option value="it">意大利文</option>
+                  </select>
+                </label>
+              </div>
+            </fieldset>
+            <div class="docs-actions">
+              <button class="enhance-btn docs-generate-btn" id="generateDocsBtn">
+                📄 生成文稿
+              </button>
+              <button class="enhance-btn docs-open-btn" id="openDocsFolderBtn" style="display:none">
+                📁 打开文件夹
+              </button>
+            </div>
+            <div class="docs-progress" id="docsProgress" style="display:none">
+              <div class="docs-progress-bar">
+                <div class="docs-progress-fill" id="docsProgressFill"></div>
+              </div>
+              <div class="docs-progress-text" id="docsProgressText">准备中...</div>
+              <button
+                class="enhance-btn docs-cancel-btn"
+                id="docsCancelBtn"
+                type="button"
+                style="display:none"
+              >
+                取消
+              </button>
+            </div>
+            <div class="docs-result" id="docsResult" style="display:none">
+              <div class="docs-result-title">生成完成</div>
+              <div class="docs-result-files" id="docsResultFiles"></div>
+            </div>
+            <div class="docs-error" id="docsError" style="display:none"></div>
+            <div class="docs-server-hint">
+              <strong>使用说明：</strong>点击“生成文稿”按钮，将自动使用 AI 格式化当前视频字幕并生成 Word 文档下载。<br>
+              无需安装任何本地服务，直接使用已配置的 AI API。<br>
+              生成速度取决于字幕长度和 AI 响应速度。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto-scroll follow button — appears when user scrolls away from playback position -->
+    <button
+      class="follow-playback-btn"
+      id="followPlaybackBtn"
+      style="display: none"
+    >
+      Follow playback
+    </button>
+
+    <script src="settings.js"></script>
+    <script src="docbuilder.js"></script>
+    <script src="docx.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

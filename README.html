@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Youtube Bilibili Digest - README</title>
+<style>
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; max-width: 880px; margin: 2.5rem auto; padding: 0 1.25rem; line-height: 1.65; color: #24292f; }
+h1, h2, h3 { line-height: 1.3; }
+pre { background: #f6f8fa; padding: 12px 14px; border-radius: 6px; overflow: auto; }
+code { background: #f6f8fa; padding: 2px 5px; border-radius: 4px; font-size: 0.92em; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #d0d7de; margin-left: 0; padding-left: 14px; color: #57606a; }
+a { color: #0969da; }
+</style>
+</head>
+<body>
+<h1>Youtube Bilibili Digest</h1>
+<p><a href="README.html">English</a> | <a href="README.zh-CN.html">简体中文</a> &nbsp;·&nbsp; Current version: <strong>17.0.0</strong></p>
+<p>Turn every YouTube and Bilibili video into a resource for deep learning. Youtube Bilibili Digest brings transcripts, bilingual translation, AI overviews, explanations, and timestamped notes into one Chrome side panel, so you can study ideas and language without losing your place.</p>
+<ul>
+<li>Turn captions into a readable, searchable learning resource, and copy or export them as plain text in whichever language mode you are viewing.</li>
+<li>Learn languages with the original transcript, a Simplified Chinese translation, or an aligned bilingual view.</li>
+<li>Build understanding with an AI overview, chapters, key quotes, and selected-text explanations — the overview has its own Original / 中文 / 双语 switch. The Original overview follows the language actually spoken in each part of the video: every chapter is written in the language spoken during that chapter's time range, so a video that switches language mid-way (for example a Chinese intro and an English interview) gets chapters in each part's language. The 中文 view translates only the non-Chinese chapters, keeping Chinese chapters verbatim at no cost, and the bilingual view is offered only when the overview is not entirely Chinese, skipping the duplicate line for chapters already in Chinese. After you adopt a foreign original transcript for an ai-zh video, the old overview is discarded and rebuilt from the new transcript the next time you open the Overview tab. Overview translation runs in batches, and any chapter it cannot translate is marked as untranslated rather than silently showing the source language.</li>
+<li>Repair transcripts that arrived without punctuation using the AI <strong>修复标点</strong> action.</li>
+<li>Navigate long videos by clicking timestamps in the transcript, overview, or notes, and let <strong>Follow playback</strong> keep the transcript scrolled to the current position.</li>
+<li>Save polished timestamped notes for later study, filtered by <strong>This Video</strong> or <strong>All Notes</strong>, and open the notes view with the <code>n</code> key on the video page.</li>
+<li>Export the whole video to Word — video info header, transcript, AI overview, and notes — as <code>.doc</code> or <code>.docx</code>.</li>
+<li>Fall back to AI (ASR) subtitle generation when a video has no native captions.</li>
+<li>Keep control of your data with your own AI endpoint, local Chrome storage, and no analytics or telemetry.</li>
+</ul>
+<p>Youtube Bilibili Digest is a bring-your-own-endpoint project installed locally from GitHub. It is not available through the Chrome Web Store and does not run a developer-operated server.</p>
+<h2>Install with your coding agent</h2>
+<p>You do not need to understand the code or use the command line. Send this message to your coding agent:</p>
+<blockquote>
+<p>Download or clone this project into a permanent folder I choose, tell me its exact full path, and use that same folder for Chrome's Load unpacked step. If I need a suggestion during this first installation, offer <code>~/Documents/youtube-bilibili-digest</code> on macOS or Linux, or <code>%USERPROFILE%\Documents\youtube-bilibili-digest</code> on Windows, but do not assume either path. Walk me through installation and setup in simple terms.</p>
+</blockquote>
+<p>Your agent should:</p>
+<ol>
+<li>Ask where you want to keep the project, download or clone it there, and tell you the exact full path.</li>
+<li>Walk you through selecting the exact project folder you chose in Chrome with <strong>Load unpacked</strong>.</li>
+<li>Show you where to enter the API base URL, API key, and model name in the extension's <strong>Settings</strong> page.</li>
+<li>Open a YouTube or Bilibili video with captions and confirm the transcript and translation work.</li>
+</ol>
+<p>Keep this folder in the same place after installation. Moving or deleting the source folder breaks the unpacked extension until you load it again from the new location.</p>
+<p>Never paste an API key into an AI chat, source file, screenshot, or public message. Enter keys yourself, directly in the Youtube Bilibili Digest Settings page. Your coding agent can point to the correct field without seeing the key.</p>
+<h2>Install manually</h2>
+<p>If you prefer to do it yourself:</p>
+<ol>
+<li>Choose a permanent folder and unzip or clone the project there. Optional suggestions are <code>~/Documents/youtube-bilibili-digest</code> on macOS or Linux, or <code>%USERPROFILE%\Documents\youtube-bilibili-digest</code> on Windows. You may use a different folder.</li>
+<li>In Chrome, open <code>chrome://extensions</code>.</li>
+<li>Turn on <strong>Developer mode</strong>.</li>
+<li>Click <strong>Load unpacked</strong>.</li>
+<li>Select the exact project folder you chose, which must contain <code>manifest.json</code>.</li>
+<li>Pin Youtube Bilibili Digest from Chrome's Extensions menu if you want quick access.</li>
+</ol>
+<p>Because this is an unpacked extension, it does not update automatically. After downloading an update or changing local files, click <strong>Reload</strong> on the Youtube Bilibili Digest card at <code>chrome://extensions</code>, then refresh open video tabs. Moving or deleting the source folder breaks the unpacked extension until you load it again from the new location.</p>
+<h2>Set up your AI endpoint</h2>
+<p>Youtube Bilibili Digest is bring-your-own-key throughout. YouTube captions are fetched through <strong>Supadata</strong> using a Supadata API key you enter in Settings; Bilibili subtitles are fetched directly with your browser's own Bilibili login and need no key. Your AI endpoint needs its own base URL and key.</p>
+<p>The Settings page — opened from the side panel, or as the extension's Options page — is organised as cards, and its own interface can be switched between English and 中文 at the top:</p>
+<ul>
+<li><strong>Transcript provider</strong>: holds the Supadata API key for YouTube captions and the <strong>Enable Bilibili mode</strong> toggle (Bilibili captions come from the platform itself, no key).</li>
+<li><strong>AI provider</strong>: base URL, API key, and model name.</li>
+<li><strong>AI subtitle generation (ASR)</strong>: the optional transcription fallback, off by default.</li>
+<li><strong>Local data</strong>: clear cached digests, delete all notes, or reset all extension data.</li>
+<li><strong>Local remix</strong>: a collapsed card with an editable prompt for adding a provider that is not OpenAI-compatible.</li>
+</ul>
+<p>For AI features (overviews, explanations, translation, note polishing), configure any OpenAI-compatible Chat Completions endpoint in Settings:</p>
+<ol>
+<li><strong>API base URL</strong>: the Chat Completions base URL of your provider. The default is Alibaba Cloud DashScope (Qwen):</li>
+</ol>
+<p><code>text
+   https://dashscope.aliyuncs.com/compatible-mode/v1</code></p>
+<ol start="2">
+<li><strong>API key</strong>: the key issued by your provider. For DashScope, create one in the Bailian console and paste it into Settings.</li>
+<li><strong>Model</strong>: the model name your endpoint accepts, for example <code>qwen-plus</code> (the default), <code>qwen-max</code>, <code>deepseek-chat</code>, or <code>gpt-4o-mini</code>.</li>
+</ol>
+<p>Open <strong>Settings</strong> from the side panel. You can also open the Youtube Bilibili Digest <strong>Options</strong> page from its card at <code>chrome://extensions</code> or by right-clicking its toolbar icon. Paste the key only into the Settings field. Never paste a key into an AI chat, repository file, screenshot, or public message.</p>
+<p>Youtube Bilibili Digest sends every AI request in non-thinking mode where the gateway supports it, for responsive, predictable interactions. Keys and settings are stored in Chrome's local extension storage on your device. Release builds do not include or use <code>config.js</code>.</p>
+<h2>Enable Bilibili mode</h2>
+<p>Bilibili support is on by default and can be toggled in Settings:</p>
+<ol>
+<li>Sign in to <code>bilibili.com</code> in the same browser first. Bilibili only returns subtitles to logged-in accounts.</li>
+<li>Open a <code>bilibili.com/video/...</code> watch page. The Digest button and side panel work the same way as on YouTube.</li>
+<li>If a video has no subtitles or you are not logged in, the panel explains that instead of failing silently.</li>
+</ol>
+<h2>AI subtitle generation (ASR)</h2>
+<p>Videos without platform subtitles are no longer a dead end. In Settings, open the <strong>AI subtitle generation (ASR)</strong> card, tick the enable switch, and fill in the ASR endpoint, key (leave empty to reuse your AI API key), and model name (default <code>qwen3-asr-flash</code>).</p>
+<p>When a video has no subtitles, the side panel offers a <strong>Generate AI Subtitles</strong> button. The extension downloads the video's audio track, resamples it in your browser, and sends it to your ASR endpoint in chunks; the generated transcript then flows through the same translation, overview, notes, and Word export pipeline. Timestamps of generated subtitles are approximate, and nothing is sent anywhere until you opt in.</p>
+<p>The original-language transcript is transcribed by ASR straight from the video's own audio track. It is never a back-translation of the Chinese subtitles, so what you read is what the speaker actually said. Any non-Simplified-Chinese source language works (English, Japanese, Korean, French, German, Spanish, Russian, Portuguese, Italian, and more). In the Word export specifically, when a Bilibili video only offers the <code>ai-zh</code> Chinese AI subtitle track and you tick the original-language transcript, that original is produced through ASR as part of the export. The Transcript tab handles the same situation differently — see <em>Bilibili videos with only Chinese AI subtitles</em> below.</p>
+<p>Two request protocols are available on the Settings page. The default is the DashScope/Qwen audio conversation protocol (<code>chat/completions</code> with <code>qwen3-asr-flash</code>), whose per-sentence timestamps are estimated by spreading each chunk over its duration. The alternative is the OpenAI/Groq-compatible Whisper <code>multipart</code> protocol (<code>/audio/transcriptions</code>), which returns the model's own real timestamps when the endpoint supports them. An optional source-language hint (for example <code>en</code>, <code>ja</code>, <code>ko</code>) can be filled in; leaving it empty lets the service auto-detect.</p>
+<h3>Limits that produce a visible error</h3>
+<p>These are hard-coded, and each one reports itself rather than failing silently:</p>
+<ul>
+<li>Videos longer than <strong>4 hours</strong> are refused for ASR.</li>
+<li>Audio is resampled to <strong>16 kHz</strong> mono and split into chunks of up to <strong>180 seconds</strong>, with at most <strong>4 chunks in flight</strong> and a <strong>240-second</strong> timeout per request.</li>
+<li>Chat-style AI requests (overview, explanation, translation, note polishing) abort after <strong>50 seconds</strong> with no output or <strong>120 seconds</strong> in total, and a response larger than <strong>2 MiB</strong> is rejected.</li>
+<li>The Word export path uses its own, more generous budget — <strong>120 seconds</strong> idle, <strong>300 seconds</strong> hard, <strong>3 parallel</strong> workers, in chunks of about <strong>7000</strong> characters — because exports are long-running.</li>
+<li>Export-time segment translation — a plain-text transcript exported in 中文 or 双语 mode, the bilingual Word document, and note translation — runs in batches of about <strong>1800 characters</strong> with up to <strong>5 batches in flight</strong>. A batch that is rate-limited, times out, or fails server-side is retried up to <strong>3 times</strong> with exponential backoff, honouring a <code>Retry-After</code> header when the provider sends one; authentication errors are not retried. A batch that still fails leaves those segments untranslated rather than aborting the whole export. The side panel's live 中文 / 双语 transcript view uses a separate viewport-driven path and is unaffected.</li>
+</ul>
+<h2>Bilibili videos with only Chinese AI subtitles</h2>
+<p>Bilibili often publishes a single machine-generated Chinese track (<code>ai-zh</code>) for a video whose audio is another language. Left alone, the Transcript tab's <strong>Original</strong> view shows that Chinese machine translation and labels it <code>Original (ai-zh)</code>.</p>
+<p>This is handled in two steps:</p>
+<ol>
+<li><strong>Free first, automatically.</strong> The initial subtitle request states no language preference, so Bilibili can return <code>ai-zh</code> even when the video also offers a free original-language track. When one exists, the extension re-requests it and switches over on its own. A platform track costs nothing, so no confirmation is needed.</li>
+<li><strong>ASR only on your click.</strong> If there is no free original track, a notice appears above the transcript — with a matching <strong>转写原文</strong> button next to <strong>修复标点</strong> — explaining that the original can be transcribed from the audio. ASR is billed by audio duration and takes minutes, so it never runs by itself.</li>
+</ol>
+<p>If the video looks genuinely Chinese, clicking says so (该视频为中文视频，无需额外转写) and stops instead of spending money. Detection reads the script of the video <em>title</em>, so a Chinese-titled English video is misjudged as Chinese; a <strong>仍然转写</strong> button appears in that case so you can override it.</p>
+<p>Once an original has been adopted, the three modes split deliberately:</p>
+<ul>
+<li><strong>Original</strong> — the adopted original-language transcript. The badge reads <code>ASR 生成</code> when it came from the audio.</li>
+<li><strong>中文</strong> — the platform's own <code>ai-zh</code> Chinese, shown verbatim. This costs nothing, which is why the platform track is kept rather than discarded.</li>
+<li><strong>双语</strong> — the adopted original paired with a fresh translation of it. This is the only mode that spends tokens here, and only when you open it. Its Chinese column therefore differs from the 中文 view: one is the platform's subtitle, the other is a translation of the original.</li>
+</ul>
+<p>Both the adopted original and the platform Chinese are cached per video, so reopening the panel neither transcribes nor translates again.</p>
+<h2>Plain-text transcript export</h2>
+<p>The <strong>Export</strong> button on the Transcript tab writes a <code>.txt</code> file for whichever language mode you currently have selected, named after the video:</p>
+<ul>
+<li><strong>Original</strong> → <code>Transcript_{title}_原文.txt</code></li>
+<li><strong>中文</strong> → <code>Transcript_{title}_中文.txt</code></li>
+<li><strong>双语</strong> → <code>Transcript_{title}_双语.txt</code>, with each translation indented directly under its source line</li>
+</ul>
+<p>Every file opens with a header carrying the title, channel, URL, and the exported mode, plus a <code>Subtitle source: ASR 生成</code> line when the transcript was produced by ASR rather than read from the platform. The video's full description is included, so check the file before you share it.</p>
+<p>Exporting <strong>Original</strong> is free — it writes what is already on screen. Exporting <strong>中文</strong> or <strong>双语</strong> translates the transcript through your AI endpoint, which costs tokens the first time. Segments already translated for the panel view are reused and the results are written back to the local cache, so a second export of the same video does not pay again. If no API key is configured, the button reports the failure rather than writing a half-translated file.</p>
+<p>When the video's own transcript is already Chinese, all three modes would contain the same text, so the export collapses to a single <code>Transcript_{title}.txt</code> with no language suffix — the same rule the Word export applies.</p>
+<h2>Word document export</h2>
+<p>The <strong>Docs</strong> tab turns the current video into Word documents. Four content blocks are exported in a fixed order, each with its own switch:</p>
+<ol>
+<li><strong>Video info header</strong> (on by default): title, platform, channel, link, duration, export time, subtitle source, and source language.</li>
+<li><strong>Transcript body</strong>, optionally with per-sentence timestamps. Turning timestamps on switches the body to the punctuation-preserving channel, because AI paragraph merging destroys per-sentence timing.</li>
+<li><strong>AI overview</strong>: chapters and key quotes.</li>
+<li><strong>Timestamped notes</strong>: the notes you saved, with their transcript context. Notes are AI-translated when you export a Chinese or bilingual mode.</li>
+</ol>
+<p>Three language modes can be exported at once, one file per mode: <strong>Original</strong>, <strong>中文</strong>, and <strong>原文·中文对照</strong>. The bilingual file aligns source and translation paragraph by paragraph using stable segment IDs, so a paragraph whose translation is missing prints an explicit grey placeholder instead of shifting every later pair out of alignment.</p>
+<p>The Docs tab also lets you steer language detection directly. A <strong>视频语言</strong> selector (自动判断 / 原文（非中文） / 中文) overrides how the source language is decided, and an <strong>原文语言</strong> selector names it explicitly — 自动, or one of English, Japanese, Korean, French, German, Spanish, Russian, Portuguese, and Italian. Naming the language matters when ASR has to produce the original transcript, because it tells the transcription what to expect. After a successful export, a <strong>📁 打开文件夹</strong> button appears to open the download location.</p>
+<p>Two file formats are offered:</p>
+<ul>
+<li><code>.doc</code> — Word-compatible HTML. The smallest output, the widest compatibility, and it works in any browser.</li>
+<li><code>.docx</code> — a real OOXML package. It relies on the browser's native <code>CompressionStream</code> (Chrome/Edge 103+). When the current browser does not support it, the export automatically falls back to <code>.doc</code> and says so in the summary area.</li>
+</ul>
+<p>File names follow <code>{title}_逐字稿_原文</code>, <code>{title}_逐字稿_中文</code>, and <code>{title}_逐字稿_对照</code>. When the only product is the Chinese transcript of an already-Chinese source, the name stays <code>{title}_逐字稿</code>. The bilingual suffix was renamed from <code>_中英对照</code> to <code>_对照</code> on purpose: the source language is no longer assumed to be English.</p>
+<p>Export can be cancelled at any time. Cancellation is cooperative — an ASR or translation chunk already in flight runs to completion and its result is then discarded. Cached segments are reused, so a second run does not pay for the same ASR or translation twice.</p>
+<h2>Use Youtube Bilibili Digest</h2>
+<ol>
+<li>Open a standard YouTube watch page with captions, or a Bilibili video page while signed in.</li>
+<li>Click the Youtube Bilibili Digest extension icon to open the side panel. Two controls are also injected onto the player: the <strong>Digest</strong> button opens the panel, and the floating <strong>Note</strong> pill saves a note at the current playback position.</li>
+<li>Read the timestamped transcript, or choose <strong>Original</strong>, <strong>中文</strong>, or <strong>双语</strong>. <strong>Copy</strong> takes the transcript to your clipboard; <strong>Export</strong> saves <code>Transcript_{title}_原文.txt</code> (or the <code>_中文</code> / <code>_双语</code> form matching the mode you selected), which also embeds the video's full description — check it before you share the file.</li>
+<li>If a transcript arrived without punctuation, a <strong>修复标点</strong> button appears and rewrites it through your AI endpoint.</li>
+<li>Open <strong>Overview</strong> for AI-generated chapters and key quotes. It carries its own <strong>Original</strong> / <strong>中文</strong> / <strong>双语</strong> switch, independent of the transcript view.</li>
+<li>Select transcript text when you want an AI explanation.</li>
+<li>Save a note from the player or a key quote, then revisit it under <strong>Saved Notes</strong>, filtered by <strong>This Video</strong> or <strong>All Notes</strong>.</li>
+<li>Press <code>n</code> on the video page to save a note without reaching for the mouse. This deliberately overrides the platform's own <code>n</code> binding (on YouTube that is "next video"), and is ignored while you are typing in a field.</li>
+<li>Scroll away from the playback position and a <strong>Follow playback</strong> button appears; click it to jump back and resume auto-scrolling.</li>
+<li>Open the <strong>Docs</strong> tab to export everything to Word.</li>
+</ol>
+<h2>What works today</h2>
+<ul>
+<li>Google Chrome 116 or newer, using the Side Panel API.</li>
+<li>Standard <code>youtube.com/watch</code> video pages and <code>bilibili.com/video</code> pages.</li>
+<li>Native subtitle tracks (YouTube captions via Supadata, Bilibili subtitles read directly from the platform). In the transcript view the extension scores the available tracks and prefers human-authored ones, then Chinese or English, while penalising machine-generated (<code>asr</code>) and auto-translated tracks; it may still fall back to another native language. The Docs export path deliberately does the opposite and prefers a <strong>non-Chinese</strong> track, so the "original" transcript stays in the video's own language. Override either behaviour with the <strong>视频语言</strong> and <strong>原文语言</strong> selectors on the Docs tab.</li>
+<li>Original, Simplified Chinese, and aligned bilingual transcript views.</li>
+<li>AI overviews, selected-text explanations, translation, and automatic note polishing through any OpenAI-compatible endpoint you configure.</li>
+<li>Local notes and a local cache for recent transcript and digest results.</li>
+<li>Optional AI (ASR) subtitle generation for videos without native subtitles, using your own ASR endpoint.</li>
+<li>Word export with a video info header, an optional per-sentence timestamp channel, the AI overview, and timestamped notes, as <code>.doc</code> or <code>.docx</code>, in original / Chinese / aligned bilingual modes.</li>
+</ul>
+<p>Shorts, live streams, private or access-restricted videos, and videos without an available native transcript may not work. Firefox, Safari, mobile browsers, and other Chromium browsers are not currently tested or supported.</p>
+<p>Youtube Bilibili Digest performs no local audio transcription. The optional ASR fallback sends audio only to the endpoint you configure, and only after you enable it in Settings.</p>
+<h2>AI usage costs</h2>
+<p>Transcript retrieval is free: it uses each platform's own caption endpoints. AI usage is billed by whichever OpenAI-compatible provider you configure. Costs depend on your provider's pricing, your chosen model, and how much you use overviews, explanations, translation, and note polishing. Translation is lazy and progressive: cached segments are reused, and only rows you scroll into view incur requests. The two exports are the exception — exporting a plain-text transcript in 中文 or 双语 mode, or generating a Word document, translates the whole transcript in one pass. Those results are cached, so repeating the same export costs nothing. Set spending limits in your provider account.</p>
+<h2>Remix it with your coding agent</h2>
+<p>This is a personal remix project. Upstream issues and pull requests are not accepted. If something breaks or you want a new feature, download or fork your own copy and ask your coding agent to fix, remix, or personalize it for you.</p>
+<p>Youtube Bilibili Digest uses plain HTML, CSS, and JavaScript with no build step, so it is a friendly starting point for agent-assisted projects. Ideas to try:</p>
+<ul>
+<li>Add more translation languages and let each person choose a learning language.</li>
+<li>Create customized summary templates for lectures, interviews, tutorials, reviews, or research talks.</li>
+<li>Build a vocabulary notebook that saves a word, its sentence, meaning, and video timestamp.</li>
+<li>Export notes and vocabulary to Markdown, CSV, Anki, or another study tool.</li>
+<li>Add personal topic filters that highlight the chapters most relevant to a goal.</li>
+<li>Add optional local-model support for a different privacy and cost tradeoff.</li>
+<li>Improve accessibility with keyboard navigation, font controls, and higher-contrast themes.</li>
+</ul>
+<p><strong>A note on internal naming (for those of you who read the code).</strong> Identifiers in the source keep the upstream <code>YTD_</code> / <code>ytd_</code> prefix (<code>YTD_SETTINGS</code>, <code>ytd_notes</code>, and similar). <code>YTD</code> is short for <em>YouTube Digest</em>, the name of the original project this one is derived from (by ZaraZhang); later features followed the same convention. These prefixes are internal only — renaming them would mean touching dozens of call sites, and a missed one fails silently. Everything user-facing says <strong>Youtube Bilibili Digest</strong>.</p>
+<p>Ask your agent to preserve the bring-your-own-key model, keep secrets out of source files, work through the verification checklist below, and test the remix on real videos.</p>
+<p>If you need a provider that does not follow the OpenAI Chat Completions API, first open the exact Youtube Bilibili Digest project folder that Chrome loaded through <strong>Load unpacked</strong> in your coding agent. Then open Youtube Bilibili Digest Settings, expand the collapsed <strong>Need a provider that is not OpenAI-compatible?</strong> card (listed under <strong>Local remix</strong>), and press <strong>Copy edited prompt</strong>. Replace the <code>[PROVIDER]</code> placeholder before sending it. Do not include any API key in the prompt or chat. After the agent updates your local copy, enter the key yourself in the Settings field it identifies.</p>
+<h2>Privacy and data flow</h2>
+<p>Youtube Bilibili Digest makes provider requests directly from the extension:</p>
+<ol>
+<li>It downloads captions from YouTube's own timedtext endpoints, or from Bilibili's subtitle and player APIs using your browser's login cookies. When you enable ASR, it also downloads the audio track from the platform's own media CDN — <code>googlevideo.com</code> for YouTube, the <code>bilivideo</code> hosts for Bilibili.</li>
+<li>It sends the transcript and relevant video metadata to the AI endpoint you configured when you request AI features.</li>
+<li>Focused features send only the content they need, such as selected text with context or small transcript batches for translation.</li>
+<li>It stores keys, settings, notes, and recent cache entries locally in Chrome.</li>
+<li>When ASR is enabled, audio chunks go only to the ASR endpoint you configured. The extension itself never uploads audio anywhere else and keeps no copy of it; the resulting text and timestamps are cached locally with the same 30-day expiry and 20-video limit.</li>
+</ol>
+<p>There is no Youtube Bilibili Digest account system, advertising, analytics, or telemetry. Your configured AI provider still receives data under its own terms and privacy policy. See <a href="PRIVACY.html">the privacy policy</a> for details.</p>
+<h2>Troubleshooting</h2>
+<h3>Cannot reach the video page</h3>
+<ul>
+<li>The extension could not talk to this tab's content script. Refresh the video tab and try again. The extension also re-injects its content script into the tab and retries once on its own.</li>
+</ul>
+<h3>Subtitle or audio requests come back empty</h3>
+<ul>
+<li>Play the video for a few seconds and try again: YouTube may not expose subtitle downloads or audio stream addresses before playback has started.</li>
+<li>If it still fails, refresh the tab. Each subtitle request's HTTP status and body size is logged to the service-worker console, which pinpoints the cause.</li>
+</ul>
+<h3>The Digest button is missing on a YouTube video</h3>
+<ul>
+<li>At <code>chrome://extensions</code>, find Youtube Bilibili Digest and click <strong>Reload</strong>, then refresh the YouTube tab.</li>
+<li>Confirm that you are on a standard <code>https://www.youtube.com/watch?...</code> page, not a Short, embed, or live page.</li>
+<li>The current version automatically follows YouTube when its responsive action bar changes. Wait a moment after the page finishes loading.</li>
+<li>If it is still missing, ask your coding agent to inspect the content script on that exact video page.</li>
+</ul>
+<h3>The side panel does not open</h3>
+<ul>
+<li>Confirm that you are on a standard <code>https://www.youtube.com/watch?...</code> page or a <code>https://www.bilibili.com/video/...</code> page.</li>
+<li>At <code>chrome://extensions</code>, confirm Youtube Bilibili Digest is enabled and click <strong>Reload</strong>.</li>
+<li>Refresh the video tab after reloading the extension.</li>
+<li>Ask your coding agent to inspect the extension if the problem continues.</li>
+</ul>
+<h3>Youtube Bilibili Digest asks for setup</h3>
+<ul>
+<li>Open <strong>Settings</strong> and save an API base URL, API key, and model. The defaults point at Alibaba Cloud DashScope with <code>qwen-plus</code>; you only need to paste your key if you use DashScope.</li>
+<li>If Settings says a legacy custom provider was removed, enter the three fields again. The old AI key was cleared so it could not be reused with the wrong service.</li>
+</ul>
+<h3>No transcript is found</h3>
+<ul>
+<li>Confirm the video is public and has native captions.</li>
+<li>YouTube videos without captions cannot produce a native transcript. If you enabled <strong>AI subtitle generation (ASR)</strong> in Settings, the panel offers to transcribe the audio instead; otherwise configure the ASR card first.</li>
+<li>For Bilibili, confirm you are signed in to <code>bilibili.com</code> in the same browser; subtitles are only returned for logged-in accounts, and many videos simply have no subtitles.</li>
+</ul>
+<h3>AI requests fail</h3>
+<ul>
+<li>A <code>401</code> or <code>403</code> usually means the API key is invalid for the configured base URL.</li>
+<li>A <code>404</code> usually means the base URL or model name is wrong for your provider.</li>
+<li>A <code>429</code> usually means a rate or spending limit was reached.</li>
+<li>If you adapted a local copy for a non-compatible model, use the Settings customization prompt again and ask your coding agent to inspect that local implementation.</li>
+</ul>
+<p>Never share API keys, private transcripts, or personal notes in chats, screenshots, or logs.</p>
+<h2>Checks for coding agents</h2>
+<p>This project has no build step, no package manager, and no test suite. The files in the repository are exactly what Chrome loads, so verification is manual. After changing the project, ask your coding agent to work through this checklist:</p>
+<ol>
+<li>Reload the unpacked extension at <code>chrome://extensions</code> and confirm the service worker registers with no errors.</li>
+<li>Open the developer tools console for the side panel, the options page, and a video page, and confirm nothing unexpected is logged.</li>
+<li>Confirm <code>manifest.json</code> still parses as valid JSON.</li>
+<li>Test one real YouTube video and one real Bilibili video end to end: transcript, translation, AI overview, a saved note, and a Word export.</li>
+<li>If you touched the ASR path, also test a video that has no native subtitles.</li>
+<li>If you edited a JavaScript file containing Chinese text, search it for stray curly quotes (<code>“</code> <code>”</code> <code>‘</code> <code>’</code>) — one smart quote in place of a string delimiter breaks the service worker without an obvious error.</li>
+</ol>
+<p>There is no automated substitute for these steps: only a live run proves that provider requests and platform interactions still work.</p>
+<h2>Credits</h2>
+<p>Youtube Bilibili Digest is a derivative of <strong>Zara Zhang</strong>'s original YouTube Digest project, and is maintained by <strong>@StaffBao</strong> on GitHub. Added in this derivative: Bilibili support, YouTube transcripts via Supadata (your own key) and Bilibili captions read directly from the platform, bring-your-own-endpoint AI configuration, optional ASR subtitle generation, bilingual keynotes, and Word export in <code>.doc</code>/<code>.docx</code>.</p>
+<h2>License</h2>
+<p>MIT. See <a href="LICENSE.html">LICENSE</a>. Copyright is held by Zara Zhang (the original work) and by StaffBao (this derivative).</p>
+</body>
+</html>

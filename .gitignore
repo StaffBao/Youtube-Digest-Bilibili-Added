@@ -1,0 +1,36 @@
+# Local configuration and secrets — never commit an API key
+config.js
+.env
+.env.*
+*.key
+
+# Chrome extension packaging artifacts.
+# A .pem is the extension's signing private key: if it leaks, anyone can
+# publish updates that Chrome treats as coming from you.
+*.pem
+*.crx
+*.zip
+
+# Dependencies (this project has no build step; kept as a guard)
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+*.log
+
+# Python (transcript server, if present)
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp

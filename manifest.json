@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "Youtube Bilibili Digest",
+  "version": "17.0.0",
+  "minimum_chrome_version": "116",
+  "description": "Turn YouTube and Bilibili videos into learning resources with transcripts, bilingual translation, AI overviews, and notes. Optional AI (ASR) subtitle generation for videos without subtitles, plus original-language (non-Chinese) transcripts via ASR. One-click Word export with video info, AI overview, timestamped notes, and .doc/.docx output.",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "tabs",
+    "scripting",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://*/*"
+  ],
+  "action": {
+    "default_title": "Open Youtube Bilibili Digest",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.bilibili.com/video/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
