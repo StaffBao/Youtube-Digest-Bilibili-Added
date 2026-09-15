@@ -4,6 +4,10 @@
  * top-level `const DEBUG` / `let` bindings ("Identifier already declared").
  */
 (() => {
+// A communication retry may inject this file again into the same isolated
+// world. Keep one set of observers/listeners instead of competing UI owners.
+if (globalThis.__ytdDigestContentInitialized) return;
+globalThis.__ytdDigestContentInitialized = true;
 /**
  * CONTENT SCRIPT
  *
@@ -54,6 +58,56 @@ let ytdDigestButton = null;
 let digestButtonObserver = null;
 let digestButtonReconcileTimer = null;
 let digestButtonResizeListenerAdded = false;
+let bilibiliUiEnabled = false;
+let bilibiliReadyRoot = null;
+let bilibiliReadinessPending = false;
+let bilibiliReadinessExhaustedRoot = null;
+
+/**
+ * document_idle / DOMContentLoaded / load do not mean Bilibili's Vue app has
+ * hydrated its server-rendered HTML. Inserting a button before hydration can
+ * make Vue treat it as a native child and abort the entire page's mount.
+ * The background reads the actual mount state in MAIN; no page DOM is changed
+ * while waiting. Unknown page versions fail closed (the side panel still works).
+ */
+function canInjectPageUi() {
+  if (currentPlatform() !== "bilibili") return true;
+  const root = document.getElementById("app");
+  if (bilibiliUiEnabled && root && root === bilibiliReadyRoot) return true;
+  if (bilibiliUiEnabled) void waitForBilibiliUi();
+  return false;
+}
+
+async function waitForBilibiliUi() {
+  if (bilibiliReadinessPending || !bilibiliUiEnabled || !isVideoPage()) return;
+  const initialRoot = document.getElementById("app");
+  if (initialRoot && initialRoot === bilibiliReadinessExhaustedRoot) return;
+  bilibiliReadinessPending = true;
+  try {
+    for (let attempt = 0; attempt < 60; attempt++) {
+      if (!isVideoPage()) return;
+      const root = document.getElementById("app");
+      let status;
+      try {
+        status = await chrome.runtime.sendMessage({ action: "checkBilibiliUiReady" });
+      } catch (_error) {
+        // Never fall back to injecting into unhydrated server HTML.
+      }
+      if (status?.ready === true && root && root === document.getElementById("app")) {
+        bilibiliReadyRoot = root;
+        bilibiliReadinessExhaustedRoot = null;
+        injectDigestButton();
+        tryInjectNoteButton();
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    bilibiliReadinessExhaustedRoot = document.getElementById("app");
+    console.warn("[Youtube Bilibili Digest] Bilibili UI is not mounted; page buttons were not injected. You can still open the extension side panel.");
+  } finally {
+    bilibiliReadinessPending = false;
+  }
+}
 
 // ============================================================
 // INITIALIZATION
@@ -72,8 +126,10 @@ async function init() {
       });
       if (!configStatus?.bilibiliEnabled) return;
     } catch (_error) {
-      // Background unavailable; proceed with injection rather than blocking.
+      // Keep the UI eligible, but the mount probe must still succeed before
+      // any injection. A background failure cannot bypass that guard.
     }
+    bilibiliUiEnabled = true;
   }
 
   // Register the global "n" keyboard shortcut once
@@ -100,6 +156,7 @@ async function init() {
  */
 function tryInjectNoteButton() {
   if (!isVideoPage()) return;
+  if (!canInjectPageUi()) return;
 
   // Clear any existing retry so we don't stack timers
   if (ytdNoteButtonRetryTimer) {
@@ -474,12 +531,21 @@ function findDigestButtonHost() {
  * so the Digest button can join the like/coin/share group.
  */
 function findBilibiliDigestHost() {
-  const candidates = Array.from(
-    document.querySelectorAll(
-      ".video-toolbar-left, .video-toolbar, .toolbar, #arc_toolbar_report",
-    ),
-  );
-  return candidates.find(isVisibleDigestHost) || null;
+  // A comma-separated selector returns DOM order, NOT selector priority:
+  // #arc_toolbar_report (the outer wrapper) used to win over its inner group.
+  // Keep our button out of generic .toolbar elements and native wrapper slots.
+  for (const selector of [
+    "#arc_toolbar_report .video-toolbar-left-main",
+    "#arc_toolbar_report .video-toolbar-left",
+    ".video-toolbar .video-toolbar-left",
+  ]) {
+    const host = Array.from(document.querySelectorAll(selector)).find(
+      (element) => element.tagName === "DIV" &&
+        !element.closest("#ytd-digest-button") && isVisibleDigestHost(element),
+    );
+    if (host) return host;
+  }
+  return null;
 }
 
 function createDigestButton() {
@@ -558,6 +624,7 @@ function createDigestButton() {
  * page during navigation and at responsive breakpoints.
  */
 function injectDigestButton() {
+  if (!canInjectPageUi()) return false;
   const existingButtons = Array.from(
     document.querySelectorAll("#ytd-digest-button"),
   );
@@ -592,7 +659,7 @@ function injectDigestButton() {
     if (currentPlatform() === "bilibili") {
       // Bilibili: append to the end so we don't disrupt the native toolbar
       // flex layout (like/coin/share/fav buttons).
-      actionsContainer.insertBefore(digestButton, actionsContainer.firstChild);
+      actionsContainer.appendChild(digestButton);
     } else {
       // YouTube turns #actions-inner into a vertical flex column at narrow
       // breakpoints. A direct child there stretches into a full-width second
@@ -657,6 +724,7 @@ function setupButtonObserver() {
 function injectNoteButton() {
   // Don't inject if we're not on a video page
   if (!isVideoPage()) return;
+  if (!canInjectPageUi()) return;
 
   // Don't inject if button already exists and is properly tracked.
   // If a stale button exists (e.g., from a previous content-script instance),
@@ -800,6 +868,7 @@ function resetNoteButtonTimer() {
  */
 function handleNoteKeyboardShortcut(e) {
   if (!isVideoPage()) return;
+  if (!canInjectPageUi()) return;
   if (e.key !== "n" && e.key !== "N") return;
 
   // Ignore if the user is typing in an input/textarea/contenteditable

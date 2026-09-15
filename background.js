@@ -438,6 +438,23 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
  * This is like a switchboard — different "actions" trigger different handlers.
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "checkBilibiliUiReady") {
+    // Only inspect the requesting video document, never a tab supplied by it.
+    if (!sender.tab?.id || sender.frameId !== 0 ||
+        !/^https:\/\/www\.bilibili\.com\/video\//.test(sender.url || "")) {
+      sendResponse({ ready: false });
+      return false;
+    }
+    chrome.scripting.executeScript({
+      target: sender.documentId
+        ? { tabId: sender.tab.id, documentIds: [sender.documentId] }
+        : { tabId: sender.tab.id, frameIds: [0] },
+      world: "MAIN",
+      func: isBilibiliUiMounted,
+    }).then((results) => sendResponse({ ready: results?.[0]?.result === true }))
+      .catch(() => sendResponse({ ready: false }));
+    return true;
+  }
   // We need to return true to indicate we'll respond asynchronously
   if (message.action === "fetchTranscript") {
     handleFetchTranscript(
@@ -1057,6 +1074,16 @@ async function runMainWorldScript(tabId, func, ...args) {
   }
 }
 
+// Vue 2 attaches __vue__ after patch/hydration, then marks the root mounted.
+// A visible toolbar or document.readyState alone can still be server HTML.
+// This probe is read-only and deliberately has no timing-based fallback.
+function isBilibiliUiMounted() {
+  const root = document.getElementById("app");
+  const app = root?.__vue__;
+  return !!(root && app && app.$el === root && app._isMounted === true &&
+    !app._isDestroyed && !app._isBeingDestroyed);
+}
+
 // ============================================================
 // ASR FALLBACK — audio stream discovery
 // ============================================================
@@ -1474,7 +1501,7 @@ async function handleFetchYouTubeTranscript(tabId, preferLang, videoId) {
 // ============================================================
 
 function scoreBilibiliSubtitle(subtitle) {
-  const lan = String(subtitle?.lan || "").toLowerCase();
+  const lan = String(subtitle?.lang || subtitle?.lan || "").toLowerCase();
   if (lan.startsWith("zh")) return 2;
   if (lan.startsWith("ai-zh")) return 1;
   if (lan.startsWith("en")) return 0;
@@ -1488,15 +1515,98 @@ function normalizeSubtitleUrl(url) {
   return value;
 }
 
-async function fetchJson(url) {
+async function fetchJson(url, { credentials = "include" } = {}) {
   const response = await fetch(url, {
-    credentials: "include",
+    credentials,
     headers: { Referer: "https://www.bilibili.com/" },
   });
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
   }
   return response.json();
+}
+
+/**
+ * Runs on demand in MAIN, including when Digest was opened AFTER playback.
+ * Do not hook fetch/XHR or change the player's subtitle selection. Initial
+ * state is only a shortcut; missing tracks must not discard the current cid.
+ */
+async function readBilibiliSubtitleState(expectedBvid, forceRefresh = false) {
+  const pageUrl = new URL(window.location.href);
+  const activeBvid = pageUrl.pathname.match(/\/video\/(BV[0-9A-Za-z]{10})/)?.[1];
+  if (pageUrl.hostname !== "www.bilibili.com" || activeBvid !== expectedBvid) {
+    return { error: "BILI_VIDEO_CHANGED", subtitles: [] };
+  }
+  const rawPart = pageUrl.searchParams.get("p") || "1";
+  const part = /^\d+$/.test(rawPart) && Number(rawPart) > 0 ? Number(rawPart) : 1;
+  const stillCurrent = () => {
+    const current = new URL(window.location.href);
+    return current.pathname.match(/\/video\/(BV[0-9A-Za-z]{10})/)?.[1] === expectedBvid &&
+      (current.searchParams.get("p") || "1") === rawPart;
+  };
+  const normalizeTracks = list => (Array.isArray(list) ? list : [])
+    .map(item => ({ lang: item?.lan || item?.lan_doc || "", url: item?.subtitle_url || "" }))
+    .filter(item => item.url);
+  const request = async url => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10_000);
+    try {
+      // The page's origin supplies the real Referer and first-party session.
+      const response = await fetch(url, {
+        credentials: "include", cache: "no-store", signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  try {
+    const initial = window.__INITIAL_STATE__?.videoData;
+    const video = initial?.bvid === expectedBvid ? initial : null;
+    const selectedPage = video?.pages?.find(item => Number(item.page) === part);
+    // A multipart page must resolve its selected part, never blindly data[0].
+    let cid = String(selectedPage?.cid || (part === 1 ? video?.cid || "" : ""));
+    let initialTracks = String(video?.cid || "") === cid
+      ? normalizeTracks(video?.subtitle?.subtitles) : [];
+    if (!/^\d{1,20}$/.test(cid)) {
+      const pages = await request(`https://api.bilibili.com/x/player/pagelist?bvid=${encodeURIComponent(expectedBvid)}`);
+      if (pages?.code !== 0) return { error: "BILI_METADATA_FAILED", code: pages?.code, subtitles: [] };
+      const selected = Array.isArray(pages.data)
+        ? pages.data.find(item => Number(item.page) === part) : null;
+      cid = String(selected?.cid || "");
+      initialTracks = [];
+    }
+    if (!stillCurrent()) return { error: "BILI_VIDEO_CHANGED", subtitles: [] };
+    if (!/^\d{1,20}$/.test(cid)) return { error: "BILI_METADATA_FAILED", subtitles: [] };
+    if (!forceRefresh && initialTracks.length) return { cid, code: 0, subtitles: initialTracks };
+
+    const player = await request(
+      `https://api.bilibili.com/x/player/wbi/v2?bvid=${encodeURIComponent(expectedBvid)}&cid=${encodeURIComponent(cid)}`,
+    );
+    if (!stillCurrent()) return { error: "BILI_VIDEO_CHANGED", subtitles: [] };
+    const subtitles = normalizeTracks(player?.data?.subtitle?.subtitles);
+    if (player?.code === -101 || (!subtitles.length && player?.data?.need_login_subtitle)) {
+      return { error: "BILI_LOGIN_REQUIRED", cid, code: player?.code, subtitles: [] };
+    }
+    if (player?.code !== 0) return { error: "BILI_SUBTITLE_API_ERROR", cid, code: player?.code, subtitles: [] };
+    return { cid, code: 0, subtitles };
+  } catch (error) {
+    return { error: "BILI_SUBTITLE_REQUEST_FAILED", message: String(error?.message || error), subtitles: [] };
+  }
+}
+
+function bilibiliSubtitleFailure(state) {
+  const error = state?.error || "BILI_PAGE_UNAVAILABLE";
+  const messages = {
+    BILI_PAGE_UNAVAILABLE: "Could not query the video page. Keep it open and try reading subtitles again.",
+    BILI_VIDEO_CHANGED: "The video changed while subtitles were being read. Try again on the current video.",
+    BILI_METADATA_FAILED: "Could not resolve the current Bilibili video part. Try reading subtitles again.",
+    BILI_LOGIN_REQUIRED: "Bilibili requires a logged-in account for these subtitles. Log in on the video page, then try again.",
+    BILI_SUBTITLE_API_ERROR: "Bilibili's subtitle API rejected the request. This does not mean the video has no subtitles. Try again later.",
+    BILI_SUBTITLE_REQUEST_FAILED: "The subtitle request failed or timed out. Check the video page's connection and try again.",
+  };
+  return { success: false, error, message: messages[error] || messages.BILI_SUBTITLE_REQUEST_FAILED };
 }
 
 /**
@@ -1518,144 +1628,61 @@ async function handleFetchBilibiliTranscript(bvid, tabId, preferLang) {
       };
     }
 
-    // First try the video page's own player state — it already carries the
-    // subtitle list for the exact part (cid) the viewer has open.
-    const pageState = tabId
-      ? await runMainWorldScript(tabId, () => {
-          try {
-            const initial =
-              window.__INITIAL_STATE__ ||
-              document.defaultView?.__INITIAL_STATE__ ||
-              null;
-            const videoData = initial?.videoData;
-            const list = videoData?.subtitle?.subtitles;
-            if (!Array.isArray(list)) return { subtitles: [], cid: "" };
-            return {
-              cid: String(videoData?.cid || ""),
-              subtitles: list
-                .map((item) => ({
-                  lang: item?.lan || item?.lan_doc || "",
-                  url: item?.subtitle_url || "",
-                }))
-                .filter((item) => item.url),
-            };
-          } catch (_error) {
-            return { subtitles: [], cid: "" };
-          }
-        })
-      : null;
+    if (!tabId) return bilibiliSubtitleFailure(null);
+    let lastFailure = null;
+    // Empty initial metadata can precede the AI track. Query afresh, with two
+    // bounded retries. Also refresh expired initial-state download URLs.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt) await new Promise(resolve => setTimeout(resolve, 750));
+      const pageState = await runMainWorldScript(tabId, readBilibiliSubtitleState, safeBvid, attempt > 0);
+      if (!pageState || pageState.error) return bilibiliSubtitleFailure(pageState);
+      const subtitles = (pageState.subtitles || [])
+        .map(item => ({ lang: item.lang, url: normalizeSubtitleUrl(item.url) }))
+        .filter(item => item.url);
+      if (!subtitles.length) continue;
 
-    let subtitles = (pageState?.subtitles || [])
-      .map((item) => ({
-        lang: item.lang,
-        url: normalizeSubtitleUrl(item.url),
-      }))
-      .filter((item) => item.url);
-    let subtitleLanguage =
-      subtitles.length === 1 ? subtitles[0].lang || null : null;
-
-    if (subtitles.length === 0) {
-      let resolvedCid = String(pageState?.cid || "").trim();
-      if (!/^\d{1,20}$/.test(resolvedCid)) {
-        const view = await fetchJson(
-          `https://api.bilibili.com/x/player/pagelist?bvid=${encodeURIComponent(safeBvid)}`,
-        );
-        const firstPage = Array.isArray(view?.data) ? view.data[0] : null;
-        resolvedCid = String(firstPage?.cid || "");
-      }
-      if (!resolvedCid) {
-        return {
-          success: false,
-          error: "NO_TRANSCRIPT",
-          message: "Could not resolve this Bilibili video.",
-        };
-      }
-
-      const player = await fetchJson(
-        `https://api.bilibili.com/x/player/wbi/v2?bvid=${encodeURIComponent(safeBvid)}&cid=${encodeURIComponent(resolvedCid)}`,
+      let ordered = [...subtitles].sort(
+        (a, b) => scoreBilibiliSubtitle(b) - scoreBilibiliSubtitle(a),
       );
+      // Keep explicit language and free-original (non-zh) preferences.
+      ordered = reorderTracksByLangPreference(ordered, preferLang, "lang");
+      const availableSubtitles = ordered.map(item => ({ lang: item.lang }));
 
-      // [v1] Distinguish "login required" (code -101/-401) from "no subtitles"
-      // (code 0 with empty list). Many Bilibili videos simply have no subtitles
-      // — that is NOT a login issue.
-      const playerCode = player?.code;
-      const loginRequired = (playerCode === -101 || playerCode === -401);
-
-      const listed = Array.isArray(player?.data?.subtitle?.subtitles)
-        ? player.data.subtitle.subtitles
-        : [];
-      subtitles = listed
-        .map((item) => ({
-          lang: item?.lan || item?.lan_doc || "",
-          url: normalizeSubtitleUrl(item?.subtitle_url),
-        }))
-        .filter((item) => item.url);
-
-      if (subtitles.length === 0) {
-        if (loginRequired) {
-          return {
-            success: false,
-            error: "BILI_LOGIN_REQUIRED",
-            message:
-              "Bilibili subtitles require a logged-in Bilibili account in this browser. Log in on bilibili.com, reopen the video, and try again.",
-          };
+      for (const subtitle of ordered) {
+        try {
+          // Subtitle CDN URLs carry their own auth signature. The CDN sends
+          // Access-Control-Allow-Origin: *, which cannot be used with include.
+          // Keep cookies on the player API, but omit them for subtitle files.
+          const data = await fetchJson(subtitle.url, { credentials: "omit" });
+          const body = Array.isArray(data?.body) ? data.body : [];
+          const rawEntries = body
+            .filter(item => item && typeof item.content === "string")
+            .map(item => ({
+              text: item.content,
+              offsetMs: Math.round((Number(item.from) || 0) * 1000),
+              durationMs: Math.max(0, Math.round(((Number(item.to) || 0) - (Number(item.from) || 0)) * 1000)),
+            }));
+          if (rawEntries.length === 0) continue;
+          const result = buildTranscriptResult(rawEntries, subtitle.lang || data?.lan || null);
+          if (result?.success) {
+            result.availableSubtitles = availableSubtitles;
+            return result;
+          }
+        } catch (subtitleError) {
+          debugLog("[Youtube Bilibili Digest BG] Bilibili subtitle source failed:", subtitleError.message);
         }
-        return {
-          success: false,
-          error: "NO_SUBTITLES",
-          message: "This video does not have subtitles.",
-        };
       }
+
+      lastFailure = {
+        success: false,
+        error: "BILI_SUBTITLE_DOWNLOAD_FAILED",
+        message: "Bilibili lists subtitles, but their text could not be downloaded. Try reading subtitles again.",
+      };
     }
-
-    let ordered = [...subtitles].sort(
-      (a, b) => scoreBilibiliSubtitle(b) - scoreBilibiliSubtitle(a),
-    );
-
-    // v10 (preferLang): when the caller asks for a specific language, move a
-    // track whose `lan` starts with that prefix to the front.
-    // v11: "non-zh" is a sentinel for "any language that is NOT Simplified
-    // Chinese". The Docs tab sends it when a non-Chinese-original video only
-    // carries Bilibili's machine `ai-zh` track, so the original-language track
-    // (ja / ko / fr / ...) can be selected without hardcoding `en`. When
-    // preferLang is absent the ordering is byte-for-byte identical to v9.
-    ordered = reorderTracksByLangPreference(ordered, preferLang, "lang");
-    const availableSubtitles = ordered.map((item) => ({ lang: item.lang }));
-
-    for (const subtitle of ordered) {
-      try {
-        const data = await fetchJson(subtitle.url);
-        const body = Array.isArray(data?.body) ? data.body : [];
-        const rawEntries = body
-          .filter((item) => item && typeof item.content === "string")
-          .map((item) => ({
-            text: item.content,
-            offsetMs: Math.round((Number(item.from) || 0) * 1000),
-            durationMs: Math.max(
-              0,
-              Math.round(((Number(item.to) || 0) - (Number(item.from) || 0)) * 1000),
-            ),
-          }));
-        if (rawEntries.length === 0) continue;
-        const language =
-          subtitleLanguage || subtitle.lang || data?.lan || null;
-        const result = buildTranscriptResult(rawEntries, language);
-        if (result && result.success) {
-          result.availableSubtitles = availableSubtitles;
-        }
-        return result;
-      } catch (subtitleError) {
-        debugLog(
-          "[Youtube Bilibili Digest BG] Bilibili subtitle source failed:",
-          subtitleError.message,
-        );
-      }
-    }
-
-    return {
+    return lastFailure || {
       success: false,
-      error: "NO_TRANSCRIPT",
-      message: "Could not download subtitles for this Bilibili video.",
+      error: "NO_SUBTITLES",
+      message: "Bilibili returned no subtitle tracks for the current video part after retrying.",
     };
   } catch (error) {
     console.error("Bilibili transcript error:", error);

@@ -1149,6 +1149,16 @@ async function startDigest(videoId, videoUrl) {
       return;
     }
 
+    // A late-opened Bilibili page can fail a subtitle query without lacking
+    // subtitles. Preserve a free retry instead of replacing it with paid ASR.
+    if (currentPlatform === "bilibili" && !isNoSubtitles) {
+      showError(
+        isLoginRequired ? "Login required" : "Could not read Bilibili subtitles",
+        transcriptResult.message || transcriptResult.error,
+      );
+      return;
+    }
+
     if (canUseAsr) {
       showState("error");
       if (isNoSubtitles) {

@@ -1,6 +1,6 @@
 # Youtube Bilibili Digest
 
-[English](README.md) | [简体中文](README.zh-CN.md) · Current version: **17.0.0**
+[English](README.md) | [简体中文](README.zh-CN.md) · Current version: **17.1.0**
 
 Turn every YouTube and Bilibili video into a resource for deep learning. Transcripts, bilingual translation, AI overviews, explanations, and timestamped notes — all in one Chrome side panel, so you can study ideas and language without losing your place.
 
@@ -78,6 +78,8 @@ After an original is adopted: **Original** shows it, **中文** shows the platfo
 
 ### Troubleshooting
 
+- **Bilibili AI subtitles are missed when Digest is opened later** — subtitle discovery runs on demand in the video page's login context when initial tracks are absent, using the current BV and part. Empty track lists receive bounded retries and expired download URLs are refreshed. API, network and login errors retain a free retry instead of being treated as missing subtitles and offering paid ASR.
+- **Bilibili images stay gray or native controls stop working** — video-page buttons now wait until Bilibili's application has mounted before touching its DOM. After updating, reload the extension and refresh existing video tabs. If readiness cannot be confirmed within about 30 seconds, page buttons stay hidden; the browser toolbar extension icon still opens the side panel.
 - **Cannot reach the video page** — the extension could not talk to the tab's content script. Refresh the video tab; the extension also re-injects its content script and retries once on its own. This error state deliberately does not offer ASR, since ASR needs the same unreachable page state.
 - **Subtitle or audio requests come back empty** — play the video for a few seconds and retry: YouTube may not expose subtitle downloads or audio stream addresses before playback starts. If it persists, refresh the tab; each subtitle request's HTTP status and body size is logged to the service-worker console.
 
@@ -91,7 +93,7 @@ Identifiers in the source keep the upstream `YTD_` / `ytd_` prefix (`YTD_SETTING
 
 ## Verifying changes
 
-There is no build step, no package manager, and no test suite — the files in this repository are exactly what Chrome loads, so verification is manual:
+There is no build step or package manager — the files in this repository are exactly what Chrome loads. Run the dependency-free Bilibili initialization and subtitle regression checks with Node.js 22+: `node --test --test-isolation=none tests/bilibili-ui.test.cjs tests/bilibili-subtitles.test.cjs`. These simulated timing and API checks do not replace real-browser verification:
 
 1. Reload the unpacked extension and confirm the service worker registers with no errors.
 2. Check the console on the side panel, the options page, and a video page.
@@ -110,4 +112,4 @@ Derivative of **Zara Zhang**'s original YouTube Digest project, maintained by **
 
 ## License
 
-MIT — see [LICENSE.html](LICENSE.html). Copyright is held by Zara Zhang (the original work) and by StaffBao (this derivative).
+MIT — see [LICENSE](LICENSE). Copyright is held by Zara Zhang (the original work) and by StaffBao (this derivative).
