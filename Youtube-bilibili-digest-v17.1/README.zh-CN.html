@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Youtube Bilibili Digest - 自述文件</title>
+<style>
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; max-width: 880px; margin: 2.5rem auto; padding: 0 1.25rem; line-height: 1.65; color: #24292f; }
+h1, h2, h3 { line-height: 1.3; }
+pre { background: #f6f8fa; padding: 12px 14px; border-radius: 6px; overflow: auto; }
+code { background: #f6f8fa; padding: 2px 5px; border-radius: 4px; font-size: 0.92em; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #d0d7de; margin-left: 0; padding-left: 14px; color: #57606a; }
+a { color: #0969da; }
+</style>
+</head>
+<body>
+<h1>Youtube Bilibili Digest</h1>
+<p><a href="README.html">English</a> | <a href="README.zh-CN.html">简体中文</a> &nbsp;·&nbsp; 当前版本：<strong>17.1.0</strong></p>
+<p>把每个 YouTube 和 Bilibili 视频变成一份可以深入学习的资料。Youtube Bilibili Digest 把字幕、双语翻译、AI 概览、内容讲解和时间戳笔记放进同一个 Chrome 侧边栏，让你可以持续学习视频中的知识和语言，同时不丢失原视频上下文。</p>
+<ul>
+<li>把零碎字幕变成清晰、可搜索的学习资料，并可一键复制，或把当前语言模式导出为纯文本。</li>
+<li>查看原文、简体中文翻译，或中英双语对照字幕来学习语言。</li>
+<li>通过 AI 概览、章节、重点引用和选中文本讲解建立系统理解；概览页另有独立的 原文 / 中文 / 双语 切换。 原文概览逐章采用该章时间范围内实际说的语言：视频中途换语言时（如中文开场 + 英文访谈），各章按各自片段的语言生成。中文 视图只翻译非中文章节、中文章节逐字保留（不花 token）；仅当概览非全中文时提供 双语，已是中文的章节不重复显示。为 ai-zh 视频采纳外文原文后，旧概览作废，下次打开概览页时按新字幕重生成。概览翻译按批进行；翻译不到的章节会标记 未翻译，而不是静默显示原文。</li>
+<li>字幕缺少标点时，用 AI 的 <strong>修复标点</strong> 一键补齐。</li>
+<li>点击字幕、概览或笔记中的时间戳快速跳转；<strong>跟随播放</strong>可让字幕自动滚动到当前播放位置。</li>
+<li>保存自动润色的时间戳笔记，支持按 <strong>本视频</strong> 或 <strong>全部笔记</strong> 筛选，并在视频页用 <code>n</code> 键快速记笔记。</li>
+<li>把整个视频导出为 Word：视频信息头、字幕正文、AI 概览与笔记，输出 <code>.doc</code> 或 <code>.docx</code>。</li>
+<li>视频没有原生字幕时，可选用 AI（ASR）生成字幕兜底。</li>
+<li>使用自己的 AI 接口，数据保存在本地 Chrome 中，不包含分析统计或行为追踪。</li>
+</ul>
+<p>Youtube Bilibili Digest 是一个<strong>需要自行提供 AI 接口</strong>的本地项目，通过 GitHub 安装。目前没有上架 Chrome 应用商店，也没有开发者运营的服务器。</p>
+<h2>让你的编程 Agent 帮你安装</h2>
+<p>你不需要看懂代码，也不需要会使用命令行。把下面这段话发送给你的编程 Agent：</p>
+<blockquote>
+<p>请把这个项目下载或克隆到我选择的长期保留文件夹，告诉我准确的完整路径，并让 Chrome“加载已解压的扩展程序”使用同一个文件夹。如果我在第一次安装时需要位置建议，可以推荐 macOS 或 Linux 上的 <code>~/Documents/youtube-bilibili-digest</code>，或 Windows 上的 <code>%USERPROFILE%\Documents\youtube-bilibili-digest</code>，但不要假设我一定使用这些路径。请用简单易懂的语言一步一步指导我完成安装和配置。</p>
+</blockquote>
+<p>你的 Agent 应该帮你：</p>
+<ol>
+<li>先询问你想把项目长期保存在哪里，再下载或克隆到那里，并告诉你准确的完整路径。</li>
+<li>指导你在 Chrome 中通过“加载已解压的扩展程序”选择你刚才确定的那个准确项目文件夹。</li>
+<li>告诉你应该在扩展的“设置”页面哪个位置填写 API 接口地址、API 密钥和模型名称。</li>
+<li>打开一个带字幕的 YouTube 或 B站视频，确认字幕和翻译功能可以使用。</li>
+</ol>
+<p>安装后请让这个文件夹留在原位。如果移动或删除它，Chrome 中加载的本地扩展会失效，需要从新的长期存放位置重新加载。</p>
+<p>不要把 API Key 发送到 AI 对话、源代码、截图或公开消息中。请你自己在 Youtube Bilibili Digest 的设置页面直接填写。编程 Agent 可以告诉你填写位置，但不需要看到 Key。</p>
+<h2>手动安装</h2>
+<p>如果你想自己操作：</p>
+<ol>
+<li>选择一个长期保留的文件夹，并把项目解压或克隆到这里。可选建议是 macOS 或 Linux 上的 <code>~/Documents/youtube-bilibili-digest</code>，或 Windows 上的 <code>%USERPROFILE%\Documents\youtube-bilibili-digest</code>。你也可以使用其他文件夹。</li>
+<li>在 Chrome 地址栏打开 <code>chrome://extensions</code>。</li>
+<li>打开右上角的“开发者模式”。</li>
+<li>点击“加载已解压的扩展程序”。</li>
+<li>选择你刚才确定的那个准确项目文件夹，其中必须包含 <code>manifest.json</code>。</li>
+<li>如果需要，可以在 Chrome 扩展菜单中固定 Youtube Bilibili Digest。</li>
+</ol>
+<p>这是一个本地加载的扩展，不会自动更新。下载新版或让 Agent 修改代码后，请在 <code>chrome://extensions</code> 中找到 Youtube Bilibili Digest 并点击“重新加载”，然后刷新已经打开的视频页面。如果移动或删除源代码文件夹，Chrome 中加载的扩展会失效，需要从新的位置重新加载。</p>
+<h2>设置你的 AI 接口</h2>
+<p>Youtube Bilibili Digest 全程自带 Key：YouTube 字幕通过 <strong>Supadata</strong> 获取，使用你在设置中填写的 Supadata API Key；Bilibili 字幕直接使用你浏览器中已登录的 B站账号获取、无需 Key。AI 接口另需自己的地址与 Key。</p>
+<p>设置页（可从侧边栏打开，也可作为扩展的“选项”页打开）按卡片组织，页面顶部还可以在 English 与中文之间切换界面语言：</p>
+<ul>
+<li><strong>字幕服务</strong>：填写 YouTube 字幕所用的 Supadata API Key，并包含<strong>启用 Bilibili 模式</strong>开关（Bilibili 字幕直接来自平台、无需 Key）。</li>
+<li><strong>AI 服务</strong>：API 接口地址、API 密钥、模型名称。</li>
+<li><strong>AI 字幕生成（ASR）</strong>：可选的转写兜底，默认关闭。</li>
+<li><strong>本地数据</strong>：清除缓存的摘要、删除全部笔记，或重置全部扩展数据。</li>
+<li><strong>本地改造</strong>：折叠卡片，内含一段可编辑的提示词，用于接入非 OpenAI 兼容的服务。</li>
+</ul>
+<p>AI 功能（概览、讲解、翻译、笔记润色）需要配置任意 OpenAI 兼容的 Chat Completions 接口，共三个字段：</p>
+<ol>
+<li><strong>API 接口地址</strong>：服务商提供的 Chat Completions 接口地址。默认为阿里云百炼 DashScope（Qwen）：</li>
+</ol>
+<p><code>text
+   https://dashscope.aliyuncs.com/compatible-mode/v1</code></p>
+<ol start="2">
+<li><strong>API 密钥</strong>：服务商签发的密钥。如果使用 DashScope，请在百炼控制台创建密钥后粘贴到设置中。</li>
+<li><strong>模型</strong>：你的接口可接受的模型名称，例如 <code>qwen-plus</code>（默认）、<code>qwen-max</code>、<code>deepseek-chat</code> 或 <code>gpt-4o-mini</code>。</li>
+</ol>
+<p>在侧边栏中打开 <strong>Settings</strong>。你也可以在 <code>chrome://extensions</code> 的 Youtube Bilibili Digest 卡片中打开扩展选项。Key 只能粘贴到设置输入框中。不要把 Key 发送到 AI 对话、项目文件、截图或公开消息中。</p>
+<p>在网关支持的情况下，Youtube Bilibili Digest 会让所有 AI 请求使用非思考模式，以获得更快、更稳定的交互。API Key 和设置保存在你设备上的 Chrome 扩展本地存储中。发布包不会包含或使用 <code>config.js</code>。</p>
+<h2>启用 Bilibili 模式</h2>
+<p>Bilibili 支持默认开启，可以在设置中关闭：</p>
+<ol>
+<li>先在同一个浏览器中登录 <code>bilibili.com</code>。B站的字幕接口只对已登录账号返回字幕。</li>
+<li>打开 <code>bilibili.com/video/...</code> 视频页。Digest 按钮和侧边栏的使用方式与 YouTube 相同。</li>
+<li>如果视频没有字幕，或者你没有登录，侧边栏会明确说明原因，而不是静默失败。</li>
+</ol>
+<h2>AI 字幕生成（ASR）</h2>
+<p>没有平台字幕的视频不再是死胡同。在设置页打开 <strong>AI 字幕生成（ASR）</strong> 卡片，勾选启用，填入 ASR 接口地址、密钥（留空则复用 AI 密钥）和模型名称（默认 <code>qwen3-asr-flash</code>）。</p>
+<p>打开没有字幕的视频时，侧边栏会出现<strong>生成 AI 字幕</strong>按钮。插件会在浏览器内下载并重采样视频音频，分块发送到你配置的 ASR 接口；生成的字幕会直接进入翻译、概览、笔记和 Word 导出的同一条流水线。生成的时间戳为近似值，且在你主动启用之前不会发送任何音频。</p>
+<p>原文逐字稿由 ASR 直接从视频自己的音轨转写，不是把中文字幕回译成外文，因此你读到的就是讲者真正说的话。任何非简体中文的原语言都适用（英、日、韩、法、德、西、俄、葡、意等）。仅就 Word 导出而言：当 B 站视频只下发 <code>ai-zh</code> 中文 AI 字幕、而你勾选了原文逐字稿时，原文会在该次导出过程中经 ASR 生成。字幕页对同一情况的处理不同，见下文《只有中文 AI 字幕的 B 站视频》。</p>
+<p>设置页提供两种请求协议。默认是 DashScope/Qwen 音频对话协议（<code>chat/completions</code> + <code>qwen3-asr-flash</code>），其逐句时间戳按分片时长均摊估算；另一种是 OpenAI/Groq 兼容的 Whisper <code>multipart</code> 协议（<code>/audio/transcriptions</code>），在端点支持时返回模型自己的真实时间戳。可选填原语言提示（如 <code>en</code>、<code>ja</code>、<code>ko</code>），留空则由服务自动识别。</p>
+<h3>会明确报错的限制</h3>
+<p>以下限制是硬编码的，触发时会明确提示，而不是静默失败：</p>
+<ul>
+<li>时长超过 <strong>4 小时</strong>的视频不执行 ASR。</li>
+<li>音频会重采样为 <strong>16 kHz</strong> 单声道，按最长 <strong>180 秒</strong>分片，最多 <strong>4 片并发</strong>，单次请求超时 <strong>240 秒</strong>。</li>
+<li>对话式 AI 请求（概览、讲解、翻译、笔记润色）在 <strong>50 秒</strong>无输出或总计 <strong>120 秒</strong>后中止；响应超过 <strong>2 MiB</strong> 会被拒绝。</li>
+<li>Word 导出走自己更宽松的预算——空闲 <strong>120 秒</strong>、硬超时 <strong>300 秒</strong>、<strong>3 路并发</strong>、每块约 <strong>7000</strong> 字——因为导出是长耗时任务。</li>
+<li>导出时的逐段翻译——以 中文 或 双语 模式导出纯文本逐字稿、生成对照 Word 文稿、以及笔记翻译——按每批约 <strong>1800 字</strong>切分，最多 <strong>5 批并发</strong>。被限速、超时或服务端出错的批次会指数退避重试最多 <strong>3 次</strong>，服务商返回 <code>Retry-After</code> 时优先采用其指示；鉴权类错误不重试。仍然失败的批次只让该段保持未翻译，不会中断整次导出。侧边栏的 中文 / 双语 字幕视图走的是另一条按视口懒加载的链路，不受影响。</li>
+</ul>
+<h2>只有中文 AI 字幕的 B 站视频</h2>
+<p>B 站经常只为一条外文音频的视频下发唯一的机器中文字幕轨（<code>ai-zh</code>）。不做处理时，字幕页的 <strong>Original</strong> 视图显示的就是这份中文机器翻译，并标注为 <code>Original (ai-zh)</code>。</p>
+<p>处理分两步：</p>
+<ol>
+<li><strong>免费的先自动取。</strong>初次请求字幕时不指定语言偏好，所以即使视频另有免费的原文字幕轨，B 站也可能只回 <code>ai-zh</code>。检测到存在非中文轨时，插件会自行重新请求并切换过去。平台字幕轨不花钱，因此无需确认。</li>
+<li><strong>ASR 只在你点击时才跑。</strong>若没有免费的原文轨，字幕上方会出现一条提示——<strong>修复标点</strong> 旁边也有一个对应的 <strong>转写原文</strong> 按钮——说明可以从原音频转写原文。ASR 按音频时长计费、耗时以分钟计，因此绝不会自动运行。</li>
+</ol>
+<p>如果判定该视频本来就是中文，点击后只会提示"该视频为中文视频，无需额外转写"并停下，不花钱。判定依据是视频<em>标题</em>的文字体系，所以中文标题的英文视频会被误判为中文；此时会出现 <strong>仍然转写</strong> 按钮供你覆盖判断。</p>
+<p>取得原文后，三种模式的取值是刻意分开的：</p>
+<ul>
+<li><strong>Original</strong> —— 取得的原文逐字稿。来自音频转写时徽章显示 <code>ASR 生成</code>。</li>
+<li><strong>中文</strong> —— 平台自己的 <code>ai-zh</code> 中文，原样显示。不产生任何费用，这也正是要保留平台字幕轨而不是丢弃它的原因。</li>
+<li><strong>双语</strong> —— 以取得的原文为源，配一份新翻译。这是此场景下唯一花 token 的模式，且只在你打开时才花。因此它的中文列与 中文 视图不同：一个是平台字幕，一个是原文的译文。</li>
+</ul>
+<p>取得的原文与平台中文都按视频缓存，重开侧边栏不会重复转写或重复翻译。</p>
+<h2>导出纯文本逐字稿</h2>
+<p>字幕页的 <strong>Export</strong> 按钮会按你当前选中的语言模式导出一份 <code>.txt</code>，文件名取自视频标题：</p>
+<ul>
+<li><strong>Original</strong> → <code>Transcript_{标题}_原文.txt</code></li>
+<li><strong>中文</strong> → <code>Transcript_{标题}_中文.txt</code></li>
+<li><strong>双语</strong> → <code>Transcript_{标题}_双语.txt</code>，译文缩进排在对应原文的下一行</li>
+</ul>
+<p>每份文件开头都有信息头，包含标题、频道、链接和本次导出的模式；当字幕是 ASR 生成而非平台自带时，还会多一行 <code>Subtitle source: ASR 生成</code>。文件同时包含视频的完整简介，分享前请先检查。</p>
+<p>导出 <strong>Original</strong> 不产生费用——它写的就是屏幕上已有的内容。导出 <strong>中文</strong> 或 <strong>双语</strong> 会通过你配置的 AI 接口翻译全篇字幕，首次导出会产生 token 费用；侧边栏视图已经翻译过的分段会被复用，结果也会写回本地缓存，因此同一个视频再导一次不会重复付费。若未配置 API 密钥，按钮会报错提示，而不是写出一份只翻译了一半的文件。</p>
+<p>当视频自带的字幕本来就是中文时，三种模式的内容会完全相同，因此导出会收敛为单个不带语言后缀的 <code>Transcript_{标题}.txt</code>——与 Word 导出采用同一条规则。</p>
+<h2>导出 Word 文稿</h2>
+<p><strong>Docs</strong> 页把当前视频整理成 Word 文稿。四个内容板块按固定顺序导出，各自有独立开关：</p>
+<ol>
+<li><strong>视频信息头</strong>（默认开启）：标题、平台、UP 主/频道、链接、时长、导出时间、字幕来源与原语言。</li>
+<li><strong>字幕正文</strong>，可选逐句时间戳。开启时间戳后正文改走保留逐句切分的标点通道，因为 AI 段落合并会破坏逐句时间。</li>
+<li><strong>AI 概览</strong>：章节与重点引用。</li>
+<li><strong>时间戳笔记</strong>：你保存的笔记及其字幕上下文。导出中文或对照模式时，笔记会经 AI 翻译。</li>
+</ol>
+<p>三种语言模式可同时导出，每种模式一个文件：<strong>原文</strong>、<strong>中文</strong>、<strong>原文·中文对照</strong>。对照稿按稳定的段落 ID 逐段对齐原文与译文，缺译的段落会显式打印灰色占位，而不是把后面的段落整体错位。</p>
+<p>Docs 页还允许你直接干预语言判断。<strong>视频语言</strong>下拉（自动判断 / 原文（非中文） / 中文）覆盖源语言的判定方式；<strong>原文语言</strong>下拉可显式指定源语言——自动，或英、日、韩、法、德、西班牙、俄、葡萄牙、意大利语之一。当原文逐字稿需要经 ASR 生成时，明确指定语言很重要，它告诉转写服务该期待哪种语言。导出成功后会出现 <strong>📁 打开文件夹</strong> 按钮，用于打开下载位置。</p>
+<p>提供两种文件格式：</p>
+<ul>
+<li><code>.doc</code> —— Word 兼容 HTML。体积最小、兼容性最广，任何浏览器都能生成。</li>
+<li><code>.docx</code> —— 真正的 OOXML 包，依赖浏览器原生的 <code>CompressionStream</code>（Chrome/Edge 103+）。当前浏览器不支持时会自动回落为 <code>.doc</code>，并在汇总区说明原因。</li>
+</ul>
+<p>文件名规则为 <code>{标题}_逐字稿_原文</code>、<code>{标题}_逐字稿_中文</code>、<code>{标题}_逐字稿_对照</code>；当唯一产物就是中文源直出的中文逐字稿时，文件名仍为 <code>{标题}_逐字稿</code>。对照稿后缀由 <code>_中英对照</code> 改名为 <code>_对照</code>，这是有意的语言泛化：原语言不再被假定为英语。</p>
+<p>导出过程可随时取消。取消是协作式的：已经发出的 ASR 或翻译分片会跑完，然后丢弃其结果。已缓存的分段会被复用，因此重复生成不会为同一次 ASR 或翻译再付一次费。</p>
+<h2>使用 Youtube Bilibili Digest</h2>
+<ol>
+<li>打开一个有字幕的普通 YouTube 视频页面，或在已登录状态下打开 B站视频页面。</li>
+<li>点击 Youtube Bilibili Digest 扩展图标，打开侧边栏。播放器上还会注入两个控件：<strong>Digest</strong> 按钮用于打开侧边栏，悬浮的 <strong>Note</strong> 胶囊按钮用于在当前播放位置记一条笔记。</li>
+<li>阅读带时间戳的字幕，或选择 <strong>Original</strong>、<strong>中文</strong>、<strong>双语</strong>。<strong>Copy</strong> 把字幕复制到剪贴板；<strong>Export</strong> 保存为 <code>Transcript_{标题}_原文.txt</code>（或按你选中的模式带 <code>_中文</code> / <code>_双语</code> 后缀），该文件还会包含视频的完整简介——分享前请先检查。</li>
+<li>如果字幕缺少标点，会出现 <strong>修复标点</strong> 按钮，通过你配置的 AI 接口重写标点。</li>
+<li>打开 <strong>Overview</strong>，查看 AI 生成的章节和重点引用。它有自己独立的 <strong>Original</strong> / <strong>中文</strong> / <strong>双语</strong> 切换，与字幕视图互不影响。</li>
+<li>选中字幕，获取 AI 内容讲解。</li>
+<li>从播放器或重点引用中保存笔记，之后在 <strong>Saved Notes</strong> 中查看，可按 <strong>This Video</strong> 或 <strong>All Notes</strong> 筛选。</li>
+<li>在视频页按 <code>n</code> 键即可不动鼠标记一条笔记。这是有意覆盖平台自己的 <code>n</code> 快捷键的（YouTube 上是“下一个视频”）；在输入框中打字时该快捷键不生效。</li>
+<li>当你滚动离开当前播放位置时，会出现 <strong>Follow playback</strong> 按钮，点击可跳回并恢复自动滚动。</li>
+<li>打开 <strong>Docs</strong> 页，把全部内容导出为 Word。</li>
+</ol>
+<h2>当前支持范围</h2>
+<ul>
+<li>Chrome 116 或更高版本，使用 Side Panel API。</li>
+<li>标准的 <code>youtube.com/watch</code> 视频页面和 <code>bilibili.com/video</code> 视频页面。</li>
+<li>直接从平台读取的原生字幕。字幕视图会对可用轨道打分，优先人工字幕，其次中文或英文，并对机器生成（<code>asr</code>）和自动翻译的轨道降权；仍可能回落到其他原生语言。Docs 导出路径则刻意相反，优先选择<strong>非中文</strong>轨道，让“原文”逐字稿保持在视频自己的语言。两种行为都可以在 Docs 页用<strong>视频语言</strong>和<strong>原文语言</strong>下拉覆盖。</li>
+<li>原文、简体中文和双语对照字幕。</li>
+<li>通过你配置的任意 OpenAI 兼容接口使用 AI 概览、选中文本讲解、翻译和自动润色笔记。</li>
+<li>本地笔记，以及最近字幕、概览和翻译的本地缓存。</li>
+<li>无原生字幕的视频可选用 AI（ASR）生成字幕，使用你自己的 ASR 接口。</li>
+<li>Word 导出：视频信息头、可选逐句时间戳的字幕正文、AI 概览与时间戳笔记，输出 <code>.doc</code> 或 <code>.docx</code>，支持原文 / 中文 / 原文·中文对照三种模式。</li>
+</ul>
+<p>Shorts、直播、私密视频、受访问限制的视频，以及没有原生字幕的视频可能无法使用。目前没有测试 Firefox、Safari、移动浏览器或其他 Chromium 浏览器。</p>
+<p>在没有原生字幕时，Youtube Bilibili Digest 不会在本地转录音频。可选的 ASR 兜底只会把音频发送到你配置的接口，且仅在设置中启用后才会发送。</p>
+<h2>AI 使用成本</h2>
+<p>字幕获取是免费的：直接使用各平台自己的字幕接口。AI 费用由你配置的服务商按其价格计费，取决于服务商定价、所选模型，以及你使用概览、讲解、翻译和笔记润色的频率。翻译是延迟按需和渐进式的：已缓存的分段会复用，只有滚动到并请求的字幕行才会发起调用。两种导出是例外——以 中文 或 双语 模式导出纯文本逐字稿，或生成 Word 文稿时，会一次性翻译整篇字幕。结果会被缓存，因此重复导出同一个视频不会再产生费用。建议在服务商账号中设置消费上限。</p>
+<h2>用编程 Agent 改造成自己的版本</h2>
+<p>这是一个个人 Remix 项目，不接受上游 Issue 或 Pull Request。如果功能出错，或者你想增加新功能，请下载或 Fork 自己的副本，再让你的编程 Agent 帮你修复、改造和个性化。</p>
+<p>Youtube Bilibili Digest 使用原生 HTML、CSS 和 JavaScript，没有构建步骤，很适合用编程 Agent 做个人项目。你可以尝试：</p>
+<ul>
+<li>增加更多翻译语言，并让每个人选择自己的学习语言。</li>
+<li>为课程、访谈、教程、测评或研究视频增加自定义总结模板。</li>
+<li>增加生词本，保存单词、原句、解释和视频时间戳。</li>
+<li>把笔记和生词导出到 Markdown、CSV、Anki 或其他学习工具。</li>
+<li>增加个人主题筛选，只突出与你目标相关的章节。</li>
+<li>增加本地模型选项，获得不同的隐私和成本方案。</li>
+<li>改善键盘操作、字体大小和高对比度等无障碍体验。</li>
+</ul>
+<p><strong>关于内部命名的说明（给会看代码的你）。</strong> 源码中的标识符沿用了上游的 <code>YTD_</code> / <code>ytd_</code> 前缀（如 <code>YTD_SETTINGS</code>、<code>ytd_notes</code>）。<code>YTD</code> 是本项目所衍生的原版名称 <em>YouTube Digest</em> 的缩写（By ZaraZhang），后续新增功能也沿用了同一约定。这些前缀纯属内部使用，改名意味着要改动数十处，调用点漏掉一处还会静默失效。所有面向用户的名称均为 <strong>Youtube Bilibili Digest</strong>。</p>
+<p>请让 Agent 保留用户自带 API Key 的模式，不要把秘密写入源代码，并按下方的验证清单逐项检查。分享自己的版本前，也要在真实视频上测试。</p>
+<p>如果需要接入不遵循 OpenAI Chat Completions API 的服务，请先在编程 Agent 中打开 Chrome 通过“加载已解压的扩展程序”使用的那个准确的 Youtube Bilibili Digest 项目文件夹。然后打开 Youtube Bilibili Digest 设置，展开 <strong>本地改造</strong> 下那张默认折叠的 <strong>需要接入非 OpenAI 兼容的服务？</strong> 卡片，点击 <strong>复制编辑后的提示词</strong>。发送前替换 <code>[PROVIDER]</code>，但不要加入任何 API Key。Agent 完成本地代码修改后，请你自己在它指出的设置位置填写 Key。</p>
+<h2>隐私和数据流向</h2>
+<p>Youtube Bilibili Digest 会直接从扩展向各平台和你配置的服务商发送请求：</p>
+<ol>
+<li>从 YouTube 自己的 timedtext 接口下载字幕，或使用你浏览器的登录态从 B站的字幕与播放器接口获取字幕。启用 ASR 时，还会从平台自己的媒体 CDN 下载音轨——YouTube 是 <code>googlevideo.com</code>，B站是 <code>bilivideo</code> 系域名。</li>
+<li>当你使用 AI 功能时，把字幕和相关视频信息发送给你配置的 AI 接口。</li>
+<li>翻译或讲解等功能只发送当前需要的内容，例如选中的文本和上下文，或少量字幕分段。</li>
+<li>API Key、设置、笔记和最近缓存保存在 Chrome 本地。</li>
+<li>启用 ASR 时，音频分片只会发送到你自己在设置页配置的 ASR 接口。扩展本身不向其他地方上传音频，也不保留音频副本；转写得到的文本与时间戳按同样的 30 天过期、最多 20 个视频的规则缓存在本地。</li>
+</ol>
+<p>Youtube Bilibili Digest 没有账号系统、广告、分析统计或行为追踪。你配置的 AI 服务商仍会按照其条款和隐私政策处理数据。详情请查看<a href="PRIVACY.html">隐私说明</a>（目前仅提供英文版）。</p>
+<h2>常见问题</h2>
+<h3>无法与视频页通信</h3>
+<ul>
+<li>扩展无法与该标签页的 content script 通信。请刷新视频标签页后重试；扩展也会自动向该标签页重新注入 content script 并重试一次。</li>
+</ul>
+<h3>字幕或音频请求返回空</h3>
+<ul>
+<li>先播放视频几秒再重试：YouTube 在播放开始前可能不下发字幕下载或音频流地址。</li>
+<li>若仍失败请刷新标签页。每次字幕请求的 HTTP 状态码与响应体大小会记录在 service worker 控制台，可用于定位原因。</li>
+</ul>
+<h3>YouTube 视频页面没有显示 Digest 按钮</h3>
+<ul>
+<li>在 <code>chrome://extensions</code> 中找到 Youtube Bilibili Digest，点击“重新加载”，然后刷新 YouTube 页面。</li>
+<li>确认当前页面是标准 <code>https://www.youtube.com/watch?...</code> 页面，而不是 Shorts、嵌入页面或直播页面。</li>
+<li>当前版本会在 YouTube 响应式操作栏变化时自动重新定位按钮。页面加载完成后可以稍等片刻。</li>
+<li>如果按钮仍然没有出现，让你的编程 Agent 在这个具体视频页面检查 content script。</li>
+</ul>
+<h3>侧边栏无法打开</h3>
+<ul>
+<li>确认你打开的是标准 <code>https://www.youtube.com/watch?...</code> 页面，或 <code>https://www.bilibili.com/video/...</code> 页面。</li>
+<li>在 <code>chrome://extensions</code> 中确认 Youtube Bilibili Digest 已启用，并点击“重新加载”。</li>
+<li>重新加载扩展后，刷新视频页面。</li>
+<li>如果问题仍然存在，让你的编程 Agent 检查扩展。</li>
+</ul>
+<h3>Youtube Bilibili Digest 提示需要设置</h3>
+<ul>
+<li>打开 <strong>Settings</strong>，保存 API 接口地址、API 密钥和模型。默认指向阿里云百炼 DashScope 和 <code>qwen-plus</code>，如果你使用 DashScope，只需要粘贴密钥。</li>
+<li>如果设置提示旧的自定义服务已移除，请重新填写三个字段。旧 AI Key 已安全清除，避免被错误用于其他服务。</li>
+</ul>
+<h3>找不到字幕</h3>
+<ul>
+<li>确认视频是公开的，并且有原生字幕。</li>
+<li>没有字幕的 YouTube 视频无法获取原生字幕。如果你在设置中启用了 <strong>AI 字幕生成（ASR）</strong>，侧边栏会提供转写音频的入口；否则请先配置 ASR 卡片。</li>
+<li>对于 Bilibili：请确认已在同一个浏览器登录 <code>bilibili.com</code>。字幕只对已登录账号返回，而且很多视频本身没有字幕。</li>
+</ul>
+<h3>AI 请求失败</h3>
+<ul>
+<li><code>401</code> 或 <code>403</code> 通常表示 API Key 与配置的接口地址不匹配或已失效。</li>
+<li><code>404</code> 通常表示接口地址或模型名称填写有误。</li>
+<li><code>429</code> 通常表示达到了服务商限速或消费上限。</li>
+<li>如果你把本地副本改成了非兼容模型，请再次使用设置中的自定义 prompt，让编程 Agent 检查本地实现。</li>
+</ul>
+<p>不要在对话、截图或日志中分享 API Key、私密字幕或个人笔记。</p>
+<h2>给编程 Agent 的验证清单</h2>
+<p>本项目没有构建步骤、没有包管理器，也没有测试套件。仓库里的文件就是 Chrome 直接加载的内容，因此验证是手动的。修改项目后，请让你的编程 Agent 逐项完成：</p>
+<ol>
+<li>在 <code>chrome://extensions</code> 重新加载已解压的扩展，确认 service worker 注册无报错。</li>
+<li>打开侧边栏、设置页和视频页的开发者工具控制台，确认没有异常输出。</li>
+<li>确认 <code>manifest.json</code> 仍是合法 JSON。</li>
+<li>在真实的 YouTube 视频和 B站视频上各跑一遍完整流程：字幕、翻译、AI 概览、保存笔记、Word 导出。</li>
+<li>如果改动了 ASR 相关代码，再测一个没有原生字幕的视频。</li>
+<li>如果修改了含中文的 JavaScript 文件，请搜索其中是否混入了弯引号（<code>“</code> <code>”</code> <code>‘</code> <code>’</code>）——一个智能引号顶替了字符串定界符，就会让 service worker 在没有明显报错的情况下失效。</li>
+</ol>
+<p>这些步骤没有自动化替代品：只有真实运行才能证明服务商请求和平台交互仍然正常。</p>
+<h2>致谢与维护</h2>
+<p>Youtube Bilibili Digest 衍生自 <strong>Zara Zhang</strong> 的原版 YouTube Digest 项目，现由 GitHub 上的 <strong>@StaffBao</strong> 维护。本衍生版新增：Bilibili 支持、YouTube 字幕经 Supadata（自备 Key）与 Bilibili 字幕直接读平台、自带接口的 AI 配置方式、可选的 ASR 字幕生成、双语要点笔记，以及 <code>.doc</code>/<code>.docx</code> 的 Word 导出。</p>
+<h2>开源许可</h2>
+<p>MIT，详见 <a href="LICENSE.html">LICENSE</a>。版权由 Zara Zhang（原作）与 StaffBao（本衍生版）分别持有。</p>
+</body>
+</html>

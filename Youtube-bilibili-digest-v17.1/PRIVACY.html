@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Youtube Bilibili Digest - Privacy</title>
+<style>
+body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; max-width: 880px; margin: 2.5rem auto; padding: 0 1.25rem; line-height: 1.65; color: #24292f; }
+h1, h2, h3 { line-height: 1.3; }
+pre { background: #f6f8fa; padding: 12px 14px; border-radius: 6px; overflow: auto; }
+code { background: #f6f8fa; padding: 2px 5px; border-radius: 4px; font-size: 0.92em; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #d0d7de; margin-left: 0; padding-left: 14px; color: #57606a; }
+a { color: #0969da; }
+</style>
+</head>
+<body>
+<h1>Privacy</h1>
+<p>Effective: September 11, 2026</p>
+<p>Youtube Bilibili Digest is a GitHub-only, bring-your-own-endpoint Chrome extension. It has no Youtube Bilibili Digest account, developer-operated backend, analytics, advertising, or telemetry.</p>
+<h2>Data the extension handles</h2>
+<p>Depending on the feature you use, Youtube Bilibili Digest handles:</p>
+<ul>
+<li>the video ID and canonical URL of the active YouTube or Bilibili video;</li>
+<li>transcript text and timestamps;</li>
+<li>video metadata such as title, channel/author, description, and duration;</li>
+<li>text you select in the transcript and nearby transcript context;</li>
+<li>transcript context around a timestamped note;</li>
+<li>content you ask to translate;</li>
+<li>video audio chunks when you use the optional AI subtitle generation (ASR);</li>
+<li>notes you save;</li>
+<li>your AI endpoint configuration, including the base URL, model name, and API key, the optional ASR endpoint configuration, and the Supadata API key for YouTube captions; and</li>
+<li>cached transcript, digest, and translation results.</li>
+</ul>
+<p>When you use an export feature, the generated file is written to your browser's default download folder. The plain-text transcript export (<code>Transcript_{title}_原文.txt</code>, <code>_中文.txt</code>, or <code>_双语.txt</code>, depending on the mode you export) embeds the video's <strong>full description</strong> in addition to the transcript, so review that file before sharing it. Exporting the 中文 or 双语 mode sends the <strong>entire transcript</strong> to your configured AI endpoint for translation in one pass, rather than only the rows you scrolled past; already-translated segments are reused from the local cache.</p>
+<h2>Where data goes</h2>
+<h3>Video platforms (transcripts, plus audio when you enable ASR)</h3>
+<p>Transcripts are fetched as follows:</p>
+<ul>
+<li><strong>YouTube</strong>: the extension sends the video's watch URL to <strong>Supadata</strong> (<code>api.supadata.ai</code>) using a Supadata API key you provide, and Supadata returns the caption transcript. When you have enabled the optional ASR feature, it also reads the audio stream URL from the page's own player data and downloads that audio track from YouTube's own media CDN (<code>googlevideo.com</code>).</li>
+<li><strong>Bilibili</strong>: the extension reads the subtitle list from the open video page (or Bilibili's official player API) and downloads the subtitle JSON from Bilibili. Player API requests use your browser's Bilibili login cookies (<code>credentials: include</code>) and a Bilibili <code>Referer</code> header, because the platform may require a logged-in account to list subtitles and stream addresses. Signed subtitle-JSON downloads omit cookies (<code>credentials: omit</code>); their URL already carries the short-lived platform signature. When ASR is enabled, the audio track is downloaded in chunks from Bilibili's own media CDN (the <code>bilivideo</code> hosts returned by that API). No Bilibili password or token is read or stored by the extension beyond what the browser already holds.</li>
+</ul>
+<p>Both CDNs are the video platform's own first-party infrastructure, not a third-party service. Audio is fetched <strong>only</strong> after you enable and trigger ASR; it is decoded, resampled, and chunked inside your browser, sent only to the ASR endpoint you configured, and never written to storage or uploaded anywhere else.</p>
+<h3>Your configured AI endpoint</h3>
+<p>AI feature content is sent to the OpenAI-compatible Chat Completions endpoint you configure in Settings (base URL + API key + model). The default is Alibaba Cloud DashScope (Qwen), but any compatible endpoint works. Depending on the feature:</p>
+<ul>
+<li>transcript plus relevant title, channel, description, or duration for an overview;</li>
+<li>selected text plus nearby transcript context for an explanation;</li>
+<li>small semantic transcript batches currently needed for progressive Chinese translation, or requested overview or explanation content;</li>
+<li>video audio chunks for transcription when you enable and trigger the optional AI subtitle generation (ASR); audio is resampled in your browser and sent only to the ASR endpoint you configured, and only after you opt in. The extension itself never uploads audio anywhere else and keeps no copy of it;</li>
+<li>nearby transcript context and video metadata when polishing a saved note.</li>
+</ul>
+<p>Requests go directly from the extension to the video platform or your configured AI endpoint. They are authenticated with your browser login (Bilibili) or the API key you supply. Youtube Bilibili Digest's developer does not proxy or receive these requests.</p>
+<p>Those services process data under their own terms, privacy policies, retention practices, and account settings. Do not send confidential, personal, or regulated content unless their terms and your obligations permit it.</p>
+<h3>Your configured ASR endpoint</h3>
+<p>When you enable the optional AI subtitle generation (ASR), short audio chunks of the active video are sent <strong>only</strong> to the ASR endpoint you configure yourself on the Options page — by default a DashScope/Qwen audio conversation endpoint (<code>chat/completions</code>), or an OpenAI/Groq-compatible Whisper endpoint (<code>/audio/transcriptions</code>) if you switch the request protocol. Audio is downloaded, resampled, and chunked inside your browser, and requests go directly from the extension to that endpoint. Youtube Bilibili Digest's developer does not proxy or receive them, and the extension stores no audio: once a chunk has been answered, only the returned text and its timestamps are kept. Nothing is sent at all until you turn the feature on.</p>
+<h2>Permissions</h2>
+<p>Because the AI and ASR endpoints are user-configurable, the extension requests broad HTTPS host access (<code>https://*/*</code>). That access is used only to reach the following, and only while a YouTube or Bilibili video page is open:</p>
+<ol>
+<li>the AI endpoint you configured in Settings;</li>
+<li>the ASR endpoint you configured, and only after you enable that optional feature;</li>
+<li>the caption/subtitle endpoints of YouTube and Bilibili;</li>
+<li>Bilibili's player APIs (<code>/x/player/pagelist</code>, <code>/x/player/playurl</code>, <code>/x/player/wbi/v2</code>); and</li>
+<li>the platforms' own media CDNs (YouTube <code>googlevideo.com</code>, Bilibili <code>bilivideo</code> hosts), and only to download the audio track when ASR is enabled.</li>
+</ol>
+<p>The extension does not use host access to read or monitor unrelated sites.</p>
+<p>Other permissions:</p>
+<ul>
+<li><code>sidePanel</code>: display the Youtube Bilibili Digest interface beside the video page.</li>
+<li><code>storage</code>: store settings, keys, notes, and cached results locally.</li>
+<li><code>tabs</code>: identify and interact with the active YouTube or Bilibili tab.</li>
+<li><code>scripting</code>: read the video page's own player data (caption tracks / subtitle list) and coordinate page controls.</li>
+<li><code>downloads</code>: save the files you export (Word <code>.doc</code>/<code>.docx</code> and plain-text transcripts). Exports are written directly to your browser's default download folder <strong>without a save dialog</strong>; nothing is uploaded anywhere.</li>
+</ul>
+<h2>Local storage and retention</h2>
+<p>Youtube Bilibili Digest uses Chrome's local extension storage, not a Youtube Bilibili Digest cloud service.</p>
+<ul>
+<li>AI settings (base URL, model, API key) remain on the device in Chrome's extension storage.</li>
+<li>Saved notes remain until you delete them or remove/clear the extension's data. The extension keeps up to 100 notes.</li>
+<li>Recent transcript, digest, and per-segment translation cache entries are stored locally. The cache is limited to 20 videos, and entries older than 30 days are removed when the side panel opens.</li>
+<li>ASR results are part of that same local cache: the transcribed text and its per-sentence timestamps are stored under the video's own cache entry, with the same 30-day expiry and 20-video limit, so a repeated export does not pay for the same transcription twice. No audio is ever written to storage.</li>
+<li>A small amount of transient state uses <code>chrome.storage.session</code>, which the extension explicitly pins to <code>TRUSTED_CONTEXTS</code>. That area lives in memory only and is cleared when the browser closes.</li>
+</ul>
+<p>Settings, keys, notes, and cache all live in <code>chrome.storage.local</code>. That area is reachable by this extension's own scripts, but not by ordinary JavaScript running on the web pages you visit.</p>
+<p>Chrome extension storage is not a password vault. Anyone with sufficient access to your browser profile or device may be able to recover locally stored keys or content. Use scoped keys where providers support them, set spending limits, and rotate or revoke a key if the device or browser profile is compromised.</p>
+<p>To remove data:</p>
+<ul>
+<li>delete individual saved notes in Youtube Bilibili Digest;</li>
+<li>use the Options page to clear cached digests, delete all notes, or reset all extension data;</li>
+<li>remove the extension or clear its stored data from Chrome to delete all local settings, keys, notes, and cache entries; and</li>
+<li>revoke the API key in your provider's console to stop its future use.</li>
+</ul>
+<p>Clearing local data does not delete information already processed or retained by the video platforms or your AI provider. Use each service's controls for service-side requests.</p>
+<h2>No sale or advertising use</h2>
+<p>Youtube Bilibili Digest does not sell personal information, build advertising profiles, or share data with data brokers. It does not include analytics SDKs.</p>
+<h2>Changes</h2>
+<p>Privacy-relevant changes will be documented in this file and in the repository history. Review updates before installing a new version.</p>
+<h2>Questions</h2>
+<p>This repository does not provide a public support or issue channel. Review this policy, the source code, and each provider's documentation before using the extension. For a vulnerability or accidental secret exposure, follow the private process in <a href="SECURITY.md">SECURITY.md</a>.</p>
+</body>
+</html>
