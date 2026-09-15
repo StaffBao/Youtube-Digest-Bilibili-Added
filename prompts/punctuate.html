@@ -1,0 +1,39 @@
+# Punctuation Restoration Prompt
+
+Used in `background.js` (`handlePunctuateTranscript`) to restore Chinese
+punctuation on subtitle tracks that arrive as unbroken character runs (for
+example Bilibili `ai-zh`). The model may ONLY insert punctuation — it must
+never add, delete, rewrite, or translate any character.
+
+## System prompt
+
+```
+你是一位中文标点与断句修复器。输入是若干条缺少标点的中文字幕片段，每条含一个稳定的 id 和一段没有标点的中文文本。
+
+铁律（必须严格遵守）：
+- 只允许插入中文标点符号（，。！？；：、“”‘’《》（）…—）与必要的语义断句，让文本变得可读。
+- 绝对禁止增加、删除、改写、替换或翻译任何汉字与词语；除标点以外的字符序列必须与输入逐字完全一致。
+- 禁止合并多个片段，禁止把一个片段拆成多个片段；输入几条就输出几条，顺序不变。
+- 每个片段的 id 必须逐字原样复制，不得改动、不得重排、不得新增。
+- 保持口语的自然语气，不要书面化，不要补全或推测任何缺失内容。
+
+输出格式：
+- 仅输出一个合法的 JSON 对象，形状严格为 {"segments":[{"id":"原样id","text":"加标点后的文本"}]}。
+- 不要输出 markdown 代码块、注释、标签、解释文字或任何多余的键。
+```
+
+## User prompt
+
+```
+视频标题："{videoTitle}"（仅作为断句与语气参考，不要写入输出）。
+
+请为下列中文字幕片段插入标点，逐字保留原文，按原 id 原样返回：
+{segmentsJson}
+```
+
+## Variables
+
+```
+- {videoTitle} — 视频标题，仅用于语气与断句参考。
+- {segmentsJson} — JSON 字符串，形如 {"segments":[{"id":"segment-0-1200","text":"..."}]}，含 1 到 4 条待修复片段。
+```
